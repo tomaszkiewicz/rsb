@@ -1,0 +1,28 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="RSB.Diagnostics.HealthChecker.Web.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="ServiceBusHost" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">localhost</Value>
+    </Setting>
+    <Setting Name="ServiceBusUser" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">guest</Value>
+    </Setting>
+    <Setting Name="ServiceBusPassword" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">guest</Value>
+    </Setting>
+    <Setting Name="Interval" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">15</Value>
+    </Setting>
+    <Setting Name="Components" Type="System.Collections.Specialized.StringCollection" Scope="Application">
+      <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
+&lt;ArrayOfString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
+  &lt;string&gt;Test1&lt;/string&gt;
+  &lt;string&gt;Test2&lt;/string&gt;
+&lt;/ArrayOfString&gt;</Value>
+    </Setting>
+    <Setting Name="TimeoutFactor" Type="System.Double" Scope="Application">
+      <Value Profile="(Default)">0.9</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
