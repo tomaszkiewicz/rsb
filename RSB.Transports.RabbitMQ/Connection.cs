@@ -26,13 +26,13 @@ namespace RSB.Transports.RabbitMQ
         public event EventHandler<ShutdownEventArgs> ConnectionShutdown;
         public event EventHandler ConnectionRestored;
 
-        private volatile bool _reconnecting;
-
         private readonly ConcurrentDictionary<string, bool> _exchanges = new ConcurrentDictionary<string, bool>();
 
         private readonly object _publishChannelLock = new object();
         private readonly object _callChannelLock = new object();
         private readonly ChannelTcsIndex _callChannelTcsIndex = new ChannelTcsIndex();
+        private readonly object _reconnectLock = new object();
+        private Thread _reconnectThread;
 
         public bool IsConnected
         {
@@ -68,17 +68,26 @@ namespace RSB.Transports.RabbitMQ
                             {
                                 // do nothing
                             }
+                            finally
+                            {
+                                _callChannel = null;
+                            }
                         }
 
                         if (_publishChannel != null)
                         {
                             try
                             {
-                                _callChannel.Dispose();
+                                _publishChannel.Dispose();
+
                             }
                             catch
                             {
                                 // do nothing
+                            }
+                            finally
+                            {
+                                _publishChannel = null;
                             }
                         }
 
@@ -95,11 +104,16 @@ namespace RSB.Transports.RabbitMQ
                             {
                                 // do nothing
                             }
+                            finally
+                            {
+                                _connection = null;
+                            }
                         }
 
                         _exchanges.Clear();
 
                         _connection = _factory.CreateConnection();
+
                         _connection.ConnectionShutdown += OnConnectionShutdown;
                         _connection.ConnectionShutdown += ConnectionShutdown;
 
@@ -140,13 +154,8 @@ namespace RSB.Transports.RabbitMQ
 
         private void ReconnectThreadRun()
         {
-            if (_reconnecting)
-                return;
-
             try
             {
-                _reconnecting = true;
-
                 while (true)
                 {
                     try
@@ -160,6 +169,8 @@ namespace RSB.Transports.RabbitMQ
                         Reconnect();
 
                         _logger.Info("Reconnect succeeded. The connection restored. All subscriptions restored.");
+
+                        RaiseConnectionRestored();
                     }
                     catch (BrokerUnreachableException ex)
                     {
@@ -179,20 +190,12 @@ namespace RSB.Transports.RabbitMQ
 
                         Thread.Sleep(5000);
                     }
-
-                    try
-                    {
-                        RaiseConnectionRestored();
-                    }
-                    catch
-                    {
-                        // do nothing
-                    }
                 }
             }
             finally
             {
-                _reconnecting = false;
+                lock (_reconnectLock)
+                    _reconnectThread = null;
             }
         }
 
@@ -216,10 +219,18 @@ namespace RSB.Transports.RabbitMQ
 
         private void StartReconnectThread()
         {
-            new Thread(ReconnectThreadRun)
+            lock (_reconnectLock)
             {
-                Name = "Reconnect"
-            }.Start();
+                if (_reconnectThread != null)
+                    return;
+
+                _reconnectThread = new Thread(ReconnectThreadRun)
+                {
+                    Name = "Reconnect"
+                };
+
+                _reconnectThread.Start();
+            }
         }
 
         public async Task<bool> Call(string messageType, string routingKey, BasicProperties properies, byte[] body)

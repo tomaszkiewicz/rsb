@@ -14,7 +14,7 @@ namespace RSB.Transports.RabbitMQ.QueueHandlers
         private readonly bool _useDurableExchanges;
         private EventingBasicConsumer _consumer;
         private IModel _channel;
-        private bool _started;
+        private volatile bool _enabled;
 
         public EventingQueueHandler(Connection connection, ITaskFactoryInvokeReceiveAction action, string exchangeName, string routingKey, QueueInfo queueInfo, bool useDurableExchanges)
         {
@@ -30,11 +30,18 @@ namespace RSB.Transports.RabbitMQ.QueueHandlers
 
         void OnConnectionRestored(object sender, System.EventArgs e)
         {
-            if (_started)
-                Start();
+            if (_enabled)
+                RestoreExchangeAndQueue();
         }
 
         public void Start()
+        {
+            RestoreExchangeAndQueue();
+
+            _enabled = true;
+        }
+
+        private void RestoreExchangeAndQueue()
         {
             if (_channel == null)
                 _channel = _connection.GetChannel();
@@ -54,8 +61,6 @@ namespace RSB.Transports.RabbitMQ.QueueHandlers
                 _channel.BasicConsume(_queueInfo.Name, true, _consumer);
                 _channel.QueueBind(_queueInfo.Name, _exchangeName, _routingKey);
             }
-
-            _started = true;
         }
 
         void OnConsumerShutdown(object sender, ShutdownEventArgs e)
@@ -77,9 +82,14 @@ namespace RSB.Transports.RabbitMQ.QueueHandlers
                     if (_consumer != null)
                         _channel.BasicCancel(_consumer.ConsumerTag);
                 }
-                catch { }
-
-                _channel = null;
+                catch
+                {
+                    // do nothing
+                }
+                finally
+                {
+                    _channel = null;
+                }
             }
 
             if (_consumer != null)
@@ -90,7 +100,7 @@ namespace RSB.Transports.RabbitMQ.QueueHandlers
                 _consumer = null;
             }
 
-            _started = false;
+            _enabled = false;
         }
 
         public void Dispose()
