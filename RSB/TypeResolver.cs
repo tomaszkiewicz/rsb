@@ -43,7 +43,7 @@ namespace RSB
 
             if (type != null)
                 return type;
-            
+
             var types = SearchTypeByName(typeName).ToArray();
 
             if (types.Length > 1)
@@ -68,6 +68,9 @@ namespace RSB
             {
                 foreach (var typeFromAssembly in a.GetTypes())
                 {
+                    if (!typeof(Exception).IsAssignableFrom(typeFromAssembly))
+                        continue;
+
                     if (typeFromAssembly.Name == typeName)
                         yield return typeFromAssembly;
                 }

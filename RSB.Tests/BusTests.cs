@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using RSB.Exceptions;
@@ -80,17 +79,28 @@ namespace RSB.Tests
         }
 
         [Test]
-        [ExpectedException(typeof(CustomException))]
         public async void CallException()
         {
             _busServer1.RegisterCallHandler<TestRpcRequest, TestRpcResponse>(req =>
             {
-                throw new CustomException("Test exception");
+                throw new CustomException("Test exception")
+                {
+                    CustomProperty = "Test property"
+                };
             });
 
             await Task.Delay(1000);
 
-            await _busServer1.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = "error" });
+            try
+            {
+                await _busServer1.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest {Content = "error"});
+
+                Assert.Fail("Exception not thrown");
+            }
+            catch (CustomException ex)
+            {
+                Assert.AreEqual("Test property", ex.CustomProperty);
+            }
         }
 
         [Test]
@@ -228,10 +238,7 @@ namespace RSB.Tests
 
         }
 
-        public CustomException(SerializationInfo info, StreamingContext context)
-        {
-
-        }
+        public string CustomProperty { get; set; }
     }
 
     public class TestMessage : Message
