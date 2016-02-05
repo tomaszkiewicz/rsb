@@ -215,30 +215,11 @@ Calling these methods may invoke some preparations on transport layer as well. F
 ### Exceptions passing
 
 RSB can pass exceptions catched during RPC execution in callee to caller and rethrown them on it.
-Exceptions are mathed to its types by class full name and to allow passing exception caller and callee have to have reference to exception class.
-
-The other requirements is that custom exceptions have to implement `ISerializable` constructors:
-
-```
-public class CustomException : Exception
-{
-    public CustomException()
-    { }
-
-    public CustomException(string message)
-        : base(message)
-    { }
-
-    public CustomException(SerializationInfo info, StreamingContext context)
-    { }
-}
-```
-
-Otherwise deserialization exception will occur.
+Exceptions are matched to its types by class full name and to allow passing exception caller and callee have to have reference to exception class.
 
 ## Known issues
 
-* Custom exceptions have to implement `ISerializable` contructors explicit.
+No known issues at the moment.
 
 
 ## Future plans
