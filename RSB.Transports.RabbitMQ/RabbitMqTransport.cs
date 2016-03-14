@@ -27,8 +27,12 @@ namespace RSB.Transports.RabbitMQ
         {
             var settings = RabbitMqTransportSettings.FromConfigurationFile(connectionName);
 
-            return new RabbitMqTransport(settings.Hostname, settings.Username, settings.Password, settings.VirtualHost, settings.Heartbeat, settings.UseDurableExchanges);
+            return new RabbitMqTransport(settings);
         }
+
+        public RabbitMqTransport(RabbitMqTransportSettings settings)
+            : this(settings.Hostname, settings.Username, settings.Password, settings.VirtualHost, settings.Heartbeat, settings.UseDurableExchanges)
+        { }
 
         public RabbitMqTransport(string hostName, string user = "guest", string password = "guest", string virtualHost = "/", ushort heartbeat = 5, bool useDurableExchanges = true)
             : this(new ConnectionFactory()
