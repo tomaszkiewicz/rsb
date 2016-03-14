@@ -33,6 +33,69 @@ RabbitMqTransport(IConnectionFactory factory, bool useDurableExchanges = true)
 
 RabbitMQ transport automatically connects to RabbitMQ server upon initialization.
 
+#### Creating RabbitMQ transport from configuration file
+
+Another way to create RabbitMQ transport is to specify settings in application configuration file.
+
+First, you have to specyfiy settings by adding new section to your configuration file and adding reference to it in configSections tag:
+
+```
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+  <configSections>
+    <section name="rabbitMqTransport" type="RSB.Transports.RabbitMQ.Settings.RabbitMqTransportSettingsSection, RSB.Transports.RabbitMQ" allowLocation="true" allowDefinition="Everywhere" />
+  </configSections>
+
+  <rabbitMqTransport>
+    <connections>
+      <connection username="guest"
+                  password="guest"
+                  hostname="localhost"
+                  />
+    </connections>
+  </rabbitMqTransport>
+</configuration>
+```
+
+Then you can create bus with RabbitMQ transport like that:
+
+```
+var bus = new Bus(RabbitMqTransport.FromConfigurationFile());
+```
+
+You can specify multiple connection settings by adding name attribute:
+
+
+```
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+  <configSections>
+    <section name="rabbitMqTransport" type="RSB.Transports.RabbitMQ.Settings.RabbitMqTransportSettingsSection, RSB.Transports.RabbitMQ" allowLocation="true" allowDefinition="Everywhere" />
+  </configSections>
+
+  <rabbitMqTransport>
+    <connections>
+      <connection name="dev"
+                  username="guest"
+                  password="guest"
+                  hostname="localhost"
+                  />
+      <connection name="prod"
+                  username="app1"
+                  password="secret"
+                  hostname="prod"
+                  />
+    </connections>
+  </rabbitMqTransport>
+</configuration>
+```
+
+
+```
+var devBus = new Bus(RabbitMqTransport.FromConfigurationFile("dev"));
+var prodBus = new Bus(RabbitMqTransport.FromConfigurationFile("prod"));
+```
+
 ### Creating contract messages
 
 RSB is message-based solution, so to exchange messages between two nodes you need to define them and share these definitions between all project that use RSB.
@@ -232,4 +295,5 @@ No known issues at the moment.
 
 ## Release history
 
+* 2016-03-14 - v0.9.* - Added configuration section for RabbitMQ transport
 * 2015-12-11 - v0.9.* - Initial public release

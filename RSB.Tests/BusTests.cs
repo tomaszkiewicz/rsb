@@ -11,8 +11,6 @@ namespace RSB.Tests
     [TestFixture]
     public class BusTests
     {
-        private const string Host = "localhost";
-
         private IBus _busServer1;
         private IBus _busServer2;
         private IBus _busClient;
@@ -29,9 +27,9 @@ namespace RSB.Tests
         [SetUp]
         public void Init()
         {
-            _busServer1 = new Bus(new RabbitMqTransport(Host));
-            _busServer2 = new Bus(new RabbitMqTransport(Host));
-            _busClient = new Bus(new RabbitMqTransport(Host));
+            _busServer1 = new Bus(RabbitMqTransport.FromConfigurationFile());
+            _busServer2 = new Bus(RabbitMqTransport.FromConfigurationFile());
+            _busClient = new Bus(RabbitMqTransport.FromConfigurationFile());
         }
 
         [TearDown]

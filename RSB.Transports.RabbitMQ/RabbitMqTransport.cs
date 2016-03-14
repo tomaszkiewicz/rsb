@@ -6,6 +6,7 @@ using RabbitMQ.Client;
 using RSB.Interfaces;
 using RSB.Serialization;
 using RSB.Transports.RabbitMQ.QueueHandlers;
+using RSB.Transports.RabbitMQ.Settings;
 
 namespace RSB.Transports.RabbitMQ
 {
@@ -21,6 +22,13 @@ namespace RSB.Transports.RabbitMQ
 
         private readonly ISerializer _serializer = new JsonSerializer();
         private readonly TypeResolver _typeResolver = new TypeResolver();
+
+        public static RabbitMqTransport FromConfigurationFile(string connectionName = "")
+        {
+            var settings = RabbitMqTransportSettings.FromConfigurationFile(connectionName);
+
+            return new RabbitMqTransport(settings.Hostname, settings.Username, settings.Password, settings.VirtualHost, settings.Heartbeat, settings.UseDurableExchanges);
+        }
 
         public RabbitMqTransport(string hostName, string user = "guest", string password = "guest", string virtualHost = "/", ushort heartbeat = 5, bool useDurableExchanges = true)
             : this(new ConnectionFactory()

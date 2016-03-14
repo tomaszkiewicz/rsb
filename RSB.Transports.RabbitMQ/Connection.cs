@@ -275,7 +275,8 @@ namespace RSB.Transports.RabbitMQ
             _shutdown = true;
 
             lock (_connectionLock)
-                _connection.Close();
+                if (_connection.IsOpen)
+                    _connection.Close();
         }
     }
 }
