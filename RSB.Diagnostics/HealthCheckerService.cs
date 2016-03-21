@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -35,6 +36,17 @@ namespace RSB.Diagnostics
 
             if (GetTimeout(GetTimeout(_interval)) == 0)
                 throw new ArgumentOutOfRangeException("interval", "Too low interval for specified timeoutFactor.");
+
+            foreach (var componentName in components.OrderBy(s => s))
+            {
+                var name = componentName;
+
+                _componentsHealths.GetOrAdd(componentName, c => new ComponentHealth()
+                {
+                    ComponentName = name,
+                    Subsystems = new ConcurrentDictionary<string, HealthState>()
+                });
+            }
         }
 
         public void Start()
@@ -50,33 +62,85 @@ namespace RSB.Diagnostics
             _timer.Dispose();
             _timer = null;
         }
+        
 
-        private volatile bool _checking = false;
-
-        private void Run(object state)
+        private void Run(object stateObj)
         {
-            if (_checking)
-                return;
+            foreach (var component in _components)
+                CheckComponent(component);
+        }
 
-            try
+        private async Task CheckComponent(string componentName)
+        {
+            var componentHealth = _componentsHealths.GetOrAdd(componentName, c => new ComponentHealth()
             {
-                _checking = true;
+                ComponentName = componentName,
+                Subsystems = new ConcurrentDictionary<string, HealthState>()
+            });
 
-                var checkTasks = _components.Select(CheckComponentHealth);
+            componentHealth.LastCheckTime = DateTime.UtcNow;
 
-                try
+            var sw = Stopwatch.StartNew();
+
+            await _bus.Call<GetHealthRequest, GetHealthResponse>(new GetHealthRequest()
+            {
+                SubsystemCheckTimeout = GetTimeout(GetTimeout(_interval))
+            }, componentName, GetTimeout(_interval)).TimeoutAfter(_interval)
+                .ContinueWith(async t =>
                 {
-                    Task.WaitAll(checkTasks.ToArray());
-                }
-                catch (Exception ex)
-                { }
+                    HealthState state;
+                    GetHealthResponse response = null;
 
-                RaiseCheckCompleted();
-            }
-            finally
-            {
-                _checking = false;
-            }
+                    try
+                    {
+                        response = await t;
+
+                        state = response.Healthy ? HealthState.Healthy : HealthState.Unhealthy;
+
+                        componentHealth.LastResponseTime = DateTime.UtcNow;
+
+                        sw.Stop();
+
+                        componentHealth.ResponseLatency = sw.Elapsed;
+                    }
+                    catch (MessageReturnedException)
+                    {
+                        state = HealthState.Offline;
+                    }
+                    catch (TimeoutException)
+                    {
+                        state = HealthState.Timeout;
+                    }
+                    catch (NotConnectedException)
+                    {
+                        state = HealthState.NotConnected;
+                    }
+                    catch (Exception)
+                    {
+                        state = HealthState.Unknown;
+                    }
+
+                    if (state != HealthState.Healthy && state != HealthState.Unhealthy && (componentHealth.Health == HealthState.Healthy || componentHealth.Health == HealthState.Unhealthy))
+                        componentHealth.LastFailureTime = DateTime.UtcNow;
+
+                    componentHealth.Health = state;
+
+                    if (response != null && response.Subsystems != null)
+                    {
+                        foreach (var kvp in response.Subsystems)
+                            componentHealth.Subsystems[kvp.Key] = kvp.Value;
+
+                        foreach (var subsystemName in componentHealth.Subsystems.Keys.Except(response.Subsystems.Keys))
+                            componentHealth.Subsystems[subsystemName] = HealthState.Unknown;
+                    }
+                    else
+                    {
+                        foreach (var subsystemName in componentHealth.Subsystems.Keys)
+                            componentHealth.Subsystems[subsystemName] = HealthState.Unknown;
+                    }
+
+                    RaiseCheckCompleted();
+                });
         }
 
         private void RaiseCheckCompleted()
@@ -87,69 +151,9 @@ namespace RSB.Diagnostics
                 CheckCompleted(this, new System.EventArgs());
         }
 
-        private async Task CheckComponentHealth(string componentName)
+        public IEnumerable<ComponentHealth> GetComponentsHealth()
         {
-            HealthState state;
-            IDictionary<string, HealthState> subsystems = null;
-
-            try
-            {
-                var response = await CallGetHealth(componentName);
-
-                state = response.Healthy ? HealthState.Healthy : HealthState.Unhealthy;
-
-                subsystems = response.Subsystems;
-            }
-            catch (MessageReturnedException)
-            {
-                state = HealthState.Offline;
-            }
-            catch (TimeoutException)
-            {
-                state = HealthState.Timeout;
-            }
-            catch (NotConnectedException)
-            {
-                state = HealthState.NotConnected;
-            }
-            catch (Exception)
-            {
-                state = HealthState.Unknown;
-            }
-
-            var componentHealth = _componentsHealths.GetOrAdd(componentName, c => new ComponentHealth()
-            {
-                Subsystems = new ConcurrentDictionary<string, HealthState>()
-            });
-
-            componentHealth.Health = state;
-
-            if (subsystems != null)
-            {
-                foreach (var subsystem in subsystems)
-                    componentHealth.Subsystems[subsystem.Key] = subsystem.Value;
-
-                foreach (var subsystemName in componentHealth.Subsystems.Keys.Except(subsystems.Keys))
-                    componentHealth.Subsystems[subsystemName] = HealthState.Unknown;
-            }
-            else
-            {
-                foreach (var subsystem in componentHealth.Subsystems)
-                    componentHealth.Subsystems[subsystem.Key] = state;
-            }
-        }
-
-        private Task<GetHealthResponse> CallGetHealth(string componentName)
-        {
-            return _bus.Call<GetHealthRequest, GetHealthResponse>(new GetHealthRequest()
-            {
-                SubsystemCheckTimeout = GetTimeout(GetTimeout(_interval))
-            }, componentName, GetTimeout(_interval)).TimeoutAfter(GetTimeout(_interval));
-        }
-
-        public IDictionary<string, ComponentHealth> GetComponentsHealth()
-        {
-            return _componentsHealths.ToDictionary(k => k.Key, v => v.Value);
+            return _componentsHealths.Values;
         }
 
         private int GetTimeout(int interval)

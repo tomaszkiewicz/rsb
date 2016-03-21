@@ -2,15 +2,6 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="RSB.Diagnostics.HealthChecker.Web.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="ServiceBusHost" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">localhost</Value>
-    </Setting>
-    <Setting Name="ServiceBusUser" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">guest</Value>
-    </Setting>
-    <Setting Name="ServiceBusPassword" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">guest</Value>
-    </Setting>
     <Setting Name="Interval" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">15</Value>
     </Setting>

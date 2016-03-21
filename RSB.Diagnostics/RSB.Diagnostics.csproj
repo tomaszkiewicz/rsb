@@ -41,9 +41,11 @@
   <ItemGroup>
     <Compile Include="BusDiagnostics.cs" />
     <Compile Include="ComponentHealth.cs" />
+    <Compile Include="Contracts\ComponentInfoMessage.cs" />
     <Compile Include="Contracts\DiscoveryMessage.cs" />
     <Compile Include="Contracts\GetHealthRequest.cs" />
     <Compile Include="Contracts\GetHealthResponse.cs" />
+    <Compile Include="BusDiscoveryClient.cs" />
     <Compile Include="HealthCheckerService.cs" />
     <Compile Include="HealthState.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

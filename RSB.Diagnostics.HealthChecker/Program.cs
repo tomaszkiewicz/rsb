@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
+using RSB.Diagnostics.Contracts;
 using RSB.Transports.RabbitMQ;
+using RSB.Transports.RabbitMQ.Settings;
 
 namespace RSB.Diagnostics.HealthChecker
 {
@@ -9,14 +12,19 @@ namespace RSB.Diagnostics.HealthChecker
         private static Bus _bus;
         private static HealthCheckerService _healthCheckerService;
         private static ConsoleColor _baseColor;
+        private static object _printLock = new object();
+        private static bool _changed;
+        private static Timer _timer;
 
         private static void Main(string[] args)
         {
             _baseColor = Console.ForegroundColor;
 
-            Console.WriteLine("Connecting to service bus {0}...", Properties.Settings.Default.ServiceBusHost);
+            var settings = RabbitMqTransportSettings.FromConfigurationFile();
 
-            _bus = new Bus(new RabbitMqTransport(Properties.Settings.Default.ServiceBusHost, Properties.Settings.Default.ServiceBusUser, Properties.Settings.Default.ServiceBusPassword));
+            Console.WriteLine("Connecting to service bus {0}...", settings.Hostname);
+
+            _bus = new Bus(new RabbitMqTransport(settings));
 
             var components = Properties.Settings.Default.Components.Cast<string>().ToArray();
 
@@ -28,6 +36,8 @@ namespace RSB.Diagnostics.HealthChecker
 
             Console.WriteLine("Performing initial health check...");
 
+            _timer = new Timer(obj => PrintHealth(), null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
+
             while (Console.ReadLine() != "exit")
             { }
 
@@ -36,42 +46,95 @@ namespace RSB.Diagnostics.HealthChecker
 
         private static void OnCheckCompleted(object sender, System.EventArgs e)
         {
-            const int componentColumnWidth = 50;
-            const int stateColumnWidth = 30;
+            _changed = true;
+        }
 
-            var delimeter = "";
-
-            for (var i = 0; i < componentColumnWidth + stateColumnWidth; i++)
-                delimeter += "-";
-
-            var componentsHealths = _healthCheckerService.GetComponentsHealth();
-
-            Console.Clear();
-            Console.WriteLine();
-            Console.WriteLine(FormatToWidth("  Component", componentColumnWidth) + FormatToWidth("State", stateColumnWidth));
-            Console.WriteLine(delimeter);
-
-            foreach (var componentHealth in componentsHealths)
+        private static void PrintHealth()
+        {
+            lock (_printLock)
             {
-                var componentName = componentHealth.Key;
-                var componentState = componentHealth.Value;
+                const int componentColumnWidth = 50;
+                const int stateColumnWidth = 15;
+                const int lastCheckWidth = 15;
+                const int lastFailureWidth = 20;
+                const int responseLatencyWidth = 20;
 
-                Console.Write(FormatToWidth("  " + componentName, componentColumnWidth));
+                var delimeter = "";
 
-                PrintHealth(componentState.Health, stateColumnWidth);
+                for (var i = 0; i < componentColumnWidth + stateColumnWidth + lastFailureWidth + lastCheckWidth + responseLatencyWidth; i++)
+                    delimeter += "-";
 
-                foreach (var subsystemKvp in componentState.Subsystems)
+                var componentsHealths = _healthCheckerService.GetComponentsHealth().OrderBy(c => c.ComponentName);
+
+                Console.Clear();
+                Console.WriteLine();
+                Console.WriteLine(FormatToWidth("  Component", componentColumnWidth) +
+                                  FormatToWidth("State", stateColumnWidth) +
+                                  FormatToWidth("Last check", lastCheckWidth) +
+                                  FormatToWidth("Response latency", responseLatencyWidth) +
+                                  FormatToWidth("Last failure", lastFailureWidth));
+                Console.WriteLine(delimeter);
+
+                var first = true;
+
+                foreach (var componentHealth in componentsHealths)
                 {
-                    Console.Write(FormatToWidth("   -> " + subsystemKvp.Key, componentColumnWidth));
+                    if (!first)
+                        Console.WriteLine();
+                    else
+                        first = false;
 
-                    PrintHealth(subsystemKvp.Value, stateColumnWidth);
+                    Console.Write(FormatToWidth("  " + componentHealth.ComponentName, componentColumnWidth));
+
+                    PrintHealth(componentHealth.Health, stateColumnWidth);
+
+                    Console.Write(FormatToWidth(FormatAgo(componentHealth.LastCheckTime), lastCheckWidth));
+                    Console.Write(FormatToWidth(FormatTimespan(componentHealth.ResponseLatency), responseLatencyWidth));
+                    Console.Write(FormatToWidth(FormatTime(componentHealth.LastFailureTime), lastFailureWidth));
+
+                    Console.WriteLine();
+
+                    foreach (var subsystemKvp in componentHealth.Subsystems)
+                    {
+                        Console.Write(FormatToWidth("   -> " + subsystemKvp.Key, componentColumnWidth));
+
+                        PrintHealth(subsystemKvp.Value, stateColumnWidth);
+
+                        Console.WriteLine();
+                    }
                 }
-            }
 
-            Console.WriteLine(delimeter);
-            Console.WriteLine();
-            Console.WriteLine("  Check time: {0}", DateTime.Now);
-            Console.WriteLine();
+                Console.WriteLine(delimeter);
+            }
+        }
+
+        private static string FormatTimespan(TimeSpan? responseLatency)
+        {
+            if (responseLatency == null || (int)responseLatency.Value.TotalMilliseconds == 0)
+                return "N/A";
+
+            return (int)responseLatency.Value.TotalMilliseconds + "ms";
+        }
+
+        private static string FormatAgo(DateTime? time)
+        {
+            if (time == null)
+                return "Never";
+
+            var secondsAgo = (int)(DateTime.UtcNow - (DateTime)time).TotalSeconds;
+
+            if (secondsAgo == 0)
+                return "Just now";
+
+            return secondsAgo + "s ago";
+        }
+
+        private static string FormatTime(DateTime? time)
+        {
+            if (time == null)
+                return "Never";
+
+            return time.Value.ToString("yyyy-MM-dd HH:mm:ss");
         }
 
         private static void PrintHealth(HealthState state, int stateColumnWidth)
@@ -81,21 +144,28 @@ namespace RSB.Diagnostics.HealthChecker
                 case HealthState.Healthy:
                     {
                         Console.ForegroundColor = ConsoleColor.DarkGreen;
-                        Console.WriteLine(FormatToWidth("Healthy", stateColumnWidth));
+                        Console.Write(FormatToWidth("Healthy", stateColumnWidth));
                     }
                     break;
 
                 case HealthState.Unhealthy:
                     {
                         Console.ForegroundColor = ConsoleColor.DarkYellow;
-                        Console.WriteLine(FormatToWidth("Unhealthy", stateColumnWidth));
+                        Console.Write(FormatToWidth("Unhealthy", stateColumnWidth));
+                    }
+                    break;
+
+                case HealthState.Unknown:
+                    {
+                        Console.ForegroundColor = ConsoleColor.DarkGray;
+                        Console.Write(FormatToWidth("Unknown", stateColumnWidth));
                     }
                     break;
 
                 default:
                     {
                         Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine(FormatToWidth(state.ToString(), stateColumnWidth));
+                        Console.Write(FormatToWidth(state.ToString(), stateColumnWidth));
                     }
                     break;
             }
@@ -103,7 +173,7 @@ namespace RSB.Diagnostics.HealthChecker
             Console.ForegroundColor = _baseColor;
         }
 
-        static string FormatToWidth(string str, int width, bool toRight = false)
+        static string FormatToWidth(string str, int width, bool toRight = false, char fillChar = ' ')
         {
             if (str.Length > width)
                 str = str.Substring(0, width);
@@ -112,9 +182,9 @@ namespace RSB.Diagnostics.HealthChecker
 
             for (var i = 0; i < add; i++)
                 if (toRight)
-                    str = " " + str;
+                    str = fillChar + str;
                 else
-                    str += " ";
+                    str += fillChar;
 
             return str;
         }

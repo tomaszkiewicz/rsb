@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -28,7 +27,7 @@ namespace RSB.Transports.RabbitMQ
             lock (_itemsLock)
             {
                 var item = _items.FirstOrDefault(i => i.CorrelationId == correlationId);
-                
+
                 if (item == null)
                     return null;
 
@@ -50,6 +49,19 @@ namespace RSB.Transports.RabbitMQ
                 _items.Remove(item);
 
                 return item.TaskCompletionSource;
+            }
+        }
+
+        public IEnumerable<TaskCompletionSource<bool>> RemoveMultiple(ulong deliveryTag)
+        {
+            lock (_itemsLock)
+            {
+                var items = _items.Where(i => i.DeliveryTag <= deliveryTag).ToArray();
+
+                foreach (var item in items)
+                    _items.Remove(item);
+
+                return items.Select(i => i.TaskCompletionSource);
             }
         }
 

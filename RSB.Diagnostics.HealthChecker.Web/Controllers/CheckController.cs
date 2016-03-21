@@ -18,28 +18,23 @@ namespace RSB.Diagnostics.HealthChecker.Web.Controllers
 
         [HttpGet]
         [Route]
-        public IEnumerable<object> CheckAllComponentsHealth()
+        public IEnumerable<ComponentHealth> CheckAllComponentsHealth()
         {
-            return _healthCheckerService.GetComponentsHealth().Select(c => new
-            {
-                Name = c.Key,
-                Health = c.Value.Health,
-                Subsystems = c.Value.Subsystems
-            });
+            return _healthCheckerService.GetComponentsHealth();
         }
 
         [HttpGet]
         [Route("{component}")]
         public HttpResponseMessage CheckHealthForSingleComponent(string component)
         {
-            var componentsHealth = _healthCheckerService.GetComponentsHealth();
+            var componentHealth = _healthCheckerService.GetComponentsHealth().FirstOrDefault(c => c.ComponentName == component);
 
             // TODO check also with first letter upper - json serialization forces camel case on /components
 
-            if (!componentsHealth.ContainsKey(component))
+            if (componentHealth == null)
                 return Request.CreateResponse(HttpStatusCode.NotFound);
 
-            return Request.CreateResponse(MapToHttpStatusCode(componentsHealth[component].Health), componentsHealth[component]);
+            return Request.CreateResponse(MapToHttpStatusCode(componentHealth.Health), componentHealth);
         }
 
         private HttpStatusCode MapToHttpStatusCode(HealthState state)

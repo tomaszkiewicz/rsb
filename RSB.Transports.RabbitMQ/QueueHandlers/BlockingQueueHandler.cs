@@ -11,7 +11,6 @@ namespace RSB.Transports.RabbitMQ.QueueHandlers
         private readonly Connection _connection;
         private readonly QueueInfo _queueInfo;
         private readonly bool _useDurableExchanges;
-        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
         private QueueingBasicConsumer _consumer;
         private IModel _channel;
         private bool _started;

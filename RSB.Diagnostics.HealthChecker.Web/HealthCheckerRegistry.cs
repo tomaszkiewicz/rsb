@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using RabbitMQ.Client;
 using RSB.Diagnostics.HealthChecker.Web.Properties;
 using RSB.Interfaces;
 using RSB.Transports.RabbitMQ;
@@ -17,15 +16,8 @@ namespace RSB.Diagnostics.HealthChecker.Web
                 x.AssembliesFromApplicationBaseDirectory();
                 x.IncludeNamespace("RSB.Diagnostics.HealthChecker.Web");
             });
-
-            var connectionFactory = new ConnectionFactory
-            {
-                HostName = Settings.Default.ServiceBusHost,
-                UserName = Settings.Default.ServiceBusUser,
-                Password = Settings.Default.ServiceBusPassword,
-            };
-
-            var bus = new Bus(new RabbitMqTransport(connectionFactory));
+            
+            var bus = new Bus(RabbitMqTransport.FromConfigurationFile());
 
             For<IBus>()
                 .Singleton()

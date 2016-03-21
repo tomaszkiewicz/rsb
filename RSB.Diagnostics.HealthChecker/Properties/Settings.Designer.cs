@@ -25,24 +25,6 @@ namespace RSB.Diagnostics.HealthChecker.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("guest")]
-        public string ServiceBusUser {
-            get {
-                return ((string)(this["ServiceBusUser"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("guest")]
-        public string ServiceBusPassword {
-            get {
-                return ((string)(this["ServiceBusPassword"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("15")]
         public int CheckInterval {
             get {
@@ -52,18 +34,9 @@ namespace RSB.Diagnostics.HealthChecker.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("localhost")]
-        public string ServiceBusHost {
-            get {
-                return ((string)(this["ServiceBusHost"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n<ArrayOfString xmlns:xsi=\"http://www.w3." +
             "org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\r\n  <s" +
-            "tring>RSB.Samples.TimeServer</string>\r\n</ArrayOfString>")]
+            "tring>Test1</string>\r\n  <string>Test2</string>\r\n</ArrayOfString>")]
         public global::System.Collections.Specialized.StringCollection Components {
             get {
                 return ((global::System.Collections.Specialized.StringCollection)(this["Components"]));

@@ -59,6 +59,7 @@ namespace RSB.Transports.RabbitMQ
                         {
                             _callChannel.BasicReturn -= OnBasicReturn;
                             _callChannel.BasicAcks -= OnBasicAcks;
+                            _callChannel.BasicNacks -= OnBasicNack;
 
                             try
                             {
@@ -123,6 +124,7 @@ namespace RSB.Transports.RabbitMQ
 
                         _callChannel.BasicReturn += OnBasicReturn;
                         _callChannel.BasicAcks += OnBasicAcks;
+                        _callChannel.BasicNacks += OnBasicNack;
 
                         _publishChannel = _connection.CreateModel();
                     }
@@ -130,12 +132,40 @@ namespace RSB.Transports.RabbitMQ
             }
         }
 
+        private void OnBasicNack(object sender, BasicNackEventArgs args)
+        {
+            if (args.Multiple)
+            {
+                var tcses = _callChannelTcsIndex.RemoveMultiple(args.DeliveryTag);
+
+                foreach (var tcs in tcses)
+                    tcs.TrySetException(new InvalidOperationException("Unable to deliver message."));
+            }
+            else
+            {
+                var tcs = _callChannelTcsIndex.Remove(args.DeliveryTag);
+
+                if (tcs != null)
+                    tcs.TrySetException(new InvalidOperationException("Unable to deliver message."));
+            }
+        }
+
         private void OnBasicAcks(object model, BasicAckEventArgs args)
         {
-            var tcs = _callChannelTcsIndex.Remove(args.DeliveryTag);
+            if (args.Multiple)
+            {
+                var tcses = _callChannelTcsIndex.RemoveMultiple(args.DeliveryTag);
 
-            if (tcs != null && !tcs.Task.IsCompleted)
-                tcs.SetResult(true);
+                foreach (var tcs in tcses)
+                    tcs.TrySetResult(true);
+            }
+            else
+            {
+                var tcs = _callChannelTcsIndex.Remove(args.DeliveryTag);
+
+                if (tcs != null)
+                    tcs.TrySetResult(true);
+            }
         }
 
         private void OnBasicReturn(object model, BasicReturnEventArgs args)
@@ -143,7 +173,7 @@ namespace RSB.Transports.RabbitMQ
             var tcs = _callChannelTcsIndex.Remove(args.BasicProperties.CorrelationId);
 
             if (tcs != null)
-                tcs.SetException(new MessageReturnedException(args.ReplyCode, args.ReplyText));
+                tcs.TrySetException(new MessageReturnedException(args.ReplyCode, args.ReplyText));
         }
 
         public IModel GetChannel()

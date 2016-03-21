@@ -88,7 +88,14 @@ namespace RSB
                 ExpirationMilliseconds = timeoutSeconds * 1000
             };
 
-            await _transport.Call(logicalAddress, properties, obj);
+            try
+            {
+                await _transport.Call(logicalAddress, properties, obj).TimeoutAfter(5);
+            }
+            catch (TimeoutException ex)
+            {
+                throw new InvalidOperationException("Failed to call - timeout");
+            }
 
             try
             {
@@ -176,7 +183,14 @@ namespace RSB
             where TResponse : new()
             where TRequest : new()
         {
-            RegisterAsyncCallHandler<TRequest, TResponse>(req => Task.FromResult(handler(req)), logicalAddress, taskFactory);
+            RegisterAsyncCallHandler<TRequest, TResponse>(req =>
+            {
+                var tcs = new TaskCompletionSource<TResponse>();
+
+                Task.Run(() => tcs.TrySetResult(handler(req)));
+
+                return tcs.Task;
+            }, logicalAddress, taskFactory);
         }
 
         public void RegisterAsyncCallHandler<TRequest, TResponse>(Func<TRequest, Task<TResponse>> handler, string logicalAddress = "", TaskFactory taskFactory = null)
