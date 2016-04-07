@@ -23,17 +23,19 @@ namespace RSB.Diagnostics.Tests
         {
             _busServer1 = new Bus(RabbitMqTransport.FromConfigurationFile());
 
-            var diagnostics1 = new BusDiagnostics(_busServer1, "Module1", "Instance1");
-
-            diagnostics1.RegisterSubsystemHealthChecker("subsystem1", () => _busServer1Subsystem1Health);
-            diagnostics1.RegisterSubsystemHealthChecker("subsystem2", () => _busServer1Subsystem2Health);
+            _busServer1.UseBusDiagnostics("Module1", "Instance1", diagnostics1 =>
+            {
+                diagnostics1.RegisterSubsystemHealthChecker("subsystem1", () => _busServer1Subsystem1Health);
+                diagnostics1.RegisterSubsystemHealthChecker("subsystem2", () => _busServer1Subsystem2Health);
+            });
 
             _busServer2 = new Bus(RabbitMqTransport.FromConfigurationFile());
 
-            var diagnostics2 = new BusDiagnostics(_busServer2, "Module2", "Instance2");
-
-            diagnostics2.RegisterSubsystemHealthChecker("subsystem1", () => _busServer2Subsystem1Health);
-            diagnostics2.RegisterSubsystemHealthChecker("subsystem2", () => _busServer2Subsystem2Health);
+            _busServer2.UseBusDiagnostics("Module2", "Instance2", diagnostics2 =>
+            {
+                diagnostics2.RegisterSubsystemHealthChecker("subsystem1", () => _busServer2Subsystem1Health);
+                diagnostics2.RegisterSubsystemHealthChecker("subsystem2", () => _busServer2Subsystem2Health);
+            });
 
             _busClient = new Bus(RabbitMqTransport.FromConfigurationFile());
 
@@ -54,7 +56,7 @@ namespace RSB.Diagnostics.Tests
         public async void TestDiscovery()
         {
             await _discoveryClient.DiscoverComponents(5);
-            
+
         }
     }
 }

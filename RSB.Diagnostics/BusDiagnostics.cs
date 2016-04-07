@@ -20,6 +20,7 @@ namespace RSB.Diagnostics
         private readonly string _runGuid;
         private readonly DateTime _runTime;
 
+        [Obsolete("Constructor is obsolete and will be removed in future version, use UseBusDiagnostics extension instead.")]
         public BusDiagnostics(IBus bus, string moduleName, string instanceName = null)
         {
             _bus = bus;
