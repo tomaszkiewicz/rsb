@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using RSB;
 using RSB.Diagnostics;
 using RSB.Transports.RabbitMQ;
@@ -11,9 +12,15 @@ namespace SampleDiscoverableModule
         {
             var bus = new Bus(RabbitMqTransport.FromConfigurationFile());
 
-            var diagnostics = new BusDiagnostics(bus,"SampleDiscoverableModule");
+            bus.UseBusDiagnostics("SampleDiscoverableModule", diagnostics =>
+            {
+                diagnostics.RegisterSubsystemHealthChecker("sampleSubsystem1", () =>
+                {
+                    Thread.Sleep(6000);
 
-            diagnostics.RegisterSubsystemHealthChecker("sampleSubsystem1", () => true);
+                    return true;
+                });
+            });
 
             Console.ReadLine();
         }
