@@ -131,9 +131,23 @@ namespace RSB
         {
             RegisterAsyncQueueHandler<T>(msg =>
             {
-                handler(msg);
+                var tcs = new TaskCompletionSource<bool>();
 
-                return Task.FromResult(true);
+                Task.Run(() =>
+                {
+                    try
+                    {
+                        handler(msg);
+
+                        tcs.TrySetResult(true);
+                    }
+                    catch (Exception ex)
+                    {
+                        tcs.TrySetException(ex);
+                    }
+                });
+
+                return tcs.Task;
             }, logicalAddress, taskFactory);
         }
 
@@ -158,9 +172,23 @@ namespace RSB
         {
             RegisterAsyncBroadcastHandler<T>(msg =>
             {
-                handler(msg);
+                var tcs = new TaskCompletionSource<bool>();
 
-                return Task.FromResult(true);
+                Task.Run(() =>
+                {
+                    try
+                    {
+                        handler(msg);
+
+                        tcs.TrySetResult(true);
+                    }
+                    catch (Exception ex)
+                    {
+                        tcs.TrySetException(ex);
+                    }
+                });
+
+                return tcs.Task;
             }, logicalAddress, taskFactory);
         }
 
@@ -187,7 +215,17 @@ namespace RSB
             {
                 var tcs = new TaskCompletionSource<TResponse>();
 
-                Task.Run(() => tcs.TrySetResult(handler(req)));
+                Task.Run(() =>
+                {
+                    try
+                    {
+                        tcs.TrySetResult(handler(req));
+                    }
+                    catch (Exception ex)
+                    {
+                        tcs.TrySetException(ex);
+                    }
+                });
 
                 return tcs.Task;
             }, logicalAddress, taskFactory);
