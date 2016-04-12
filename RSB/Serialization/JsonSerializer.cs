@@ -1,5 +1,6 @@
 ﻿using System;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using RSB.Exceptions;
 
@@ -15,8 +16,16 @@ namespace RSB.Serialization
                 IgnoreSerializableAttribute = true,
             },
             DateTimeZoneHandling = DateTimeZoneHandling.Utc,
-            ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
         };
+
+        public JsonSerializer()
+        {
+            _jsonSettings.Converters.Add(new IsoDateTimeConverter()
+            {
+                DateTimeFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss.fff'Z'" 
+            });
+        }
 
         public object Deserialize(string str, Type type)
         {
