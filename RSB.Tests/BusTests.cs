@@ -43,11 +43,12 @@ namespace RSB.Tests
         [Test]
         public async void CallNoLogicalAddress()
         {
-            _busServer1.RegisterCallHandler<TestRpcRequest, TestRpcResponse>(req => new TestRpcResponse { Content = req.Content });
+            _busServer1.RegisterCallHandler<TestRpcRequest, TestRpcResponse>(req => new TestRpcResponse { Content = req.Content, SampleEnum = req.SampleEnum });
 
-            var response = await _busServer1.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = TestContent });
+            var response = await _busServer1.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = TestContent, SampleEnum = SampleEnum.Third });
 
             Assert.AreEqual(TestContent, response.Content);
+            Assert.AreEqual(SampleEnum.Third, response.SampleEnum);
         }
 
         [Test]
@@ -91,7 +92,7 @@ namespace RSB.Tests
 
             try
             {
-                await _busServer1.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest {Content = "error"});
+                await _busServer1.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = "error" });
 
                 Assert.Fail("Exception not thrown");
             }
@@ -249,14 +250,23 @@ namespace RSB.Tests
         public List<TestMessage> TestMessages { get; set; }
     }
 
+    public enum SampleEnum
+    {
+        First,
+        Second,
+        Third
+    }
+
     public class TestRpcRequest
     {
         public string Content { get; set; }
+        public SampleEnum SampleEnum { get; set; }
     }
 
     public class TestRpcResponse
     {
         public string Content { get; set; }
+        public SampleEnum SampleEnum { get; set; }
     }
 
     public class TestRpcRequest2

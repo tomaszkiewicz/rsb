@@ -25,6 +25,11 @@ namespace RSB.Serialization
             {
                 DateTimeFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss.fff'Z'" 
             });
+
+            _jsonSettings.Converters.Add(new StringEnumConverter()
+            {
+                CamelCaseText = false
+            });
         }
 
         public object Deserialize(string str, Type type)
