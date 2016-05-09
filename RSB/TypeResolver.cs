@@ -47,10 +47,10 @@ namespace RSB
             var types = SearchTypeByName(typeName).ToArray();
 
             if (types.Length > 1)
-                throw new InvalidOperationException("Found more than one type");
+                throw new InvalidOperationException($"Found more than one type for {typeName}");
 
             if (types.Length == 0)
-                throw new InvalidOperationException("Type not found");
+                throw new InvalidOperationException($"Type {typeName} not found");
 
             _typesCache[typeName] = types[0];
 
