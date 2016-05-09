@@ -1,12 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using NLog;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
 namespace RSB.Transports.RabbitMQ.QueueHandlers
 {
-    internal class BlockingQueueHandler : IBlockingQueueHandler
+    internal class BlockingQueueHandler : IBlockingQueueHandler, IDisposable
     {
         private readonly Connection _connection;
         private readonly QueueInfo _queueInfo;
@@ -85,12 +85,6 @@ namespace RSB.Transports.RabbitMQ.QueueHandlers
         public void Dispose()
         {
             _connection.ConnectionRestored -= OnConnectionRestored;
-        }
-
-        class BindingItem
-        {
-            public string ExchangeName { get; set; }
-            public string RoutingKey { get; set; }
         }
     }
 }

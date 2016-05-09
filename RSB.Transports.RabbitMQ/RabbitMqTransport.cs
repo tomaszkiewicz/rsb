@@ -61,6 +61,14 @@ namespace RSB.Transports.RabbitMQ
             return new BlockingQueueHandler(_connection, queueInfo, _useDurableExchanges);
         }
 
+        public IPollingQueueHandler GetRawPollingQueueHandler(QueueInfo queueInfo = null)
+        {
+            if (queueInfo == null)
+                queueInfo = new QueueInfo();
+
+            return new PollingQueueHandler(_connection, queueInfo, _useDurableExchanges);
+        }
+
         public void Enqueue<T>(string logicalAddress, MessageProperties properties, T body)
         {
             properties.ContentType = _serializer.ContentType;

@@ -57,6 +57,9 @@
     <Compile Include="Converters.cs" />
     <Compile Include="IBlockingQueueHandler.cs" />
     <Compile Include="ITaskFactoryInvokeReceiveAction.cs" />
+    <Compile Include="QueueHandlers\BindingItem.cs" />
+    <Compile Include="IPollingQueueHandler.cs" />
+    <Compile Include="QueueHandlers\PollingQueueHandler.cs" />
     <Compile Include="QueueInfo.cs" />
     <Compile Include="Settings\RabbitMqTransportSettings.cs" />
     <Compile Include="Settings\RabbitMqTransportSettingsCollection.cs" />
