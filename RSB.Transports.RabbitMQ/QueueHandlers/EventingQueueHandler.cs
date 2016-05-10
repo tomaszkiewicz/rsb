@@ -65,7 +65,7 @@ namespace RSB.Transports.RabbitMQ.QueueHandlers
 
         void OnConsumerShutdown(object sender, ShutdownEventArgs e)
         {
-            Stop();
+            ClearChannelAndConsumer();
         }
 
         void OnConsumerReceived(object sender, BasicDeliverEventArgs args)
@@ -74,6 +74,13 @@ namespace RSB.Transports.RabbitMQ.QueueHandlers
         }
 
         public void Stop()
+        {
+            ClearChannelAndConsumer();
+
+            _enabled = false;
+        }
+
+        private void ClearChannelAndConsumer()
         {
             if (_channel != null)
             {
@@ -99,8 +106,6 @@ namespace RSB.Transports.RabbitMQ.QueueHandlers
 
                 _consumer = null;
             }
-
-            _enabled = false;
         }
 
         public void Dispose()

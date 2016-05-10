@@ -124,7 +124,7 @@ namespace RSB.Transports.RabbitMQ
             }
         }
 
-        public bool IsConnected { get { return _connection.IsConnected; } }
+        public bool IsConnected => _connection.IsConnected;
 
         public void Shutdown()
         {
