@@ -163,7 +163,7 @@ namespace RSB
                 });
             };
 
-            var listenAddress = string.Format("queue-{0}-{1}", GetMessageType<T>(), logicalAddress);
+            var listenAddress = $"queue-{GetMessageType<T>()}-{logicalAddress}";
 
             _transport.Subscribe(dispatcher, logicalAddress, listenAddress, taskFactory);
         }
@@ -274,7 +274,7 @@ namespace RSB
                 _transport.Enqueue(properties.ReplyTo, responseProperties, responseObj);
             };
 
-            var listenAddress = string.Format("call-{0}-{1}", GetMessageType<TRequest>(), logicalAddress);
+            var listenAddress = $"call-{GetMessageType<TRequest>()}-{logicalAddress}";
 
             _transport.Subscribe(dispatcher, logicalAddress, listenAddress, taskFactory);
         }
@@ -350,9 +350,7 @@ namespace RSB
         {
             var eventHandler = raiseEventHandler;
 
-            if (eventHandler == null) return;
-
-            eventHandler(this, new BusExceptionEventArgs()
+            eventHandler?.Invoke(this, new BusExceptionEventArgs()
             {
                 Exception = ex,
                 Message = message,

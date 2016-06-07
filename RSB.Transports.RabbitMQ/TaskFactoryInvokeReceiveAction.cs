@@ -8,6 +8,9 @@ namespace RSB.Transports.RabbitMQ
 {
     class TaskFactoryInvokeReceiveAction<T> : ITaskFactoryInvokeReceiveAction where T : new()
     {
+        private const string ExceptionField = "exception";
+        private const string ExceptionTypeField = "exceptionType";
+
         private readonly Action<Message<T>> _dispatcher;
         private readonly ISerializer _serializer;
         private readonly TaskFactory _taskFactory;
@@ -32,7 +35,7 @@ namespace RSB.Transports.RabbitMQ
 
             if (CheckIfGenericException(item))
             {
-                DispatchException(item, new RemoteException(GetHeaderValue(item, "exception")));
+                DispatchException(item, new RemoteException(GetHeaderValue(item, ExceptionField)));
 
                 return;
             }
@@ -53,11 +56,20 @@ namespace RSB.Transports.RabbitMQ
         {
             Exception exception;
 
+            var typeName = GetHeaderValue(item, ExceptionTypeField);
+
             try
             {
-                var type = _typeResolver.GetType(GetHeaderValue(item, "exceptionType"));
+                var type = _typeResolver.GetType(typeName);
 
-                exception = (Exception)_serializer.Deserialize(item.Body, type);
+                exception = (Exception) _serializer.Deserialize(item.Body, type);
+            }
+            catch (TypeLoadException)
+            {
+                exception = new UnresolvedRemoteTypeException(System.Text.Encoding.UTF8.GetString(item.Body))
+                {
+                    TypeName = typeName
+                };
             }
             catch (Exception ex)
             {
@@ -88,11 +100,12 @@ namespace RSB.Transports.RabbitMQ
 
         bool CheckIfTypedException(BasicDeliverEventArgs item)
         {
-            return item.BasicProperties.Headers != null && item.BasicProperties.Headers.ContainsKey("exceptionType");
+            return item.BasicProperties.Headers != null && item.BasicProperties.Headers.ContainsKey(ExceptionTypeField);
         }
+
         bool CheckIfGenericException(BasicDeliverEventArgs item)
         {
-            return item.BasicProperties.Headers != null && item.BasicProperties.Headers.ContainsKey("exception");
+            return item.BasicProperties.Headers != null && item.BasicProperties.Headers.ContainsKey(ExceptionField);
         }
     }
 }

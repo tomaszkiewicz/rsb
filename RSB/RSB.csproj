@@ -52,6 +52,7 @@
     <Compile Include="Bus.cs" />
     <Compile Include="EventArgs\BusExceptionEventArgs.cs" />
     <Compile Include="Exceptions\RemoteException.cs" />
+    <Compile Include="Exceptions\UnresolvedRemoteTypeException.cs" />
     <Compile Include="Message.cs" />
     <Compile Include="MessageProperties.cs" />
     <Compile Include="Extensions\TimeoutAfterExtension.cs" />

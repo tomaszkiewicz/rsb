@@ -7,7 +7,7 @@ namespace RSB.Exceptions
         public RemoteException(string message)
             : base(message)
         {
-                    
+
         }
     }
 }
