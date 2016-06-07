@@ -145,8 +145,7 @@ namespace RSB.Transports.RabbitMQ
             {
                 var tcs = _callChannelTcsIndex.Remove(args.DeliveryTag);
 
-                if (tcs != null)
-                    tcs.TrySetException(new InvalidOperationException("Unable to deliver message."));
+                tcs?.TrySetException(new InvalidOperationException("Unable to deliver message."));
             }
         }
 
@@ -163,8 +162,7 @@ namespace RSB.Transports.RabbitMQ
             {
                 var tcs = _callChannelTcsIndex.Remove(args.DeliveryTag);
 
-                if (tcs != null)
-                    tcs.TrySetResult(true);
+                tcs?.TrySetResult(true);
             }
         }
 
@@ -172,8 +170,7 @@ namespace RSB.Transports.RabbitMQ
         {
             var tcs = _callChannelTcsIndex.Remove(args.BasicProperties.CorrelationId);
 
-            if (tcs != null)
-                tcs.TrySetException(new MessageReturnedException(args.ReplyCode, args.ReplyText));
+            tcs?.TrySetException(new MessageReturnedException(args.ReplyCode, args.ReplyText));
         }
 
         public IModel GetChannel()
@@ -233,8 +230,7 @@ namespace RSB.Transports.RabbitMQ
         {
             var handler = ConnectionRestored;
 
-            if (handler != null)
-                handler(this, new System.EventArgs());
+            handler?.Invoke(this, new System.EventArgs());
         }
 
         private void OnConnectionShutdown(object connection, ShutdownEventArgs reason)

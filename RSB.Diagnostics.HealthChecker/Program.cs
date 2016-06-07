@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Threading;
-using RSB.Diagnostics.Contracts;
 using RSB.Transports.RabbitMQ;
 using RSB.Transports.RabbitMQ.Settings;
 
@@ -12,11 +11,10 @@ namespace RSB.Diagnostics.HealthChecker
         private static Bus _bus;
         private static HealthCheckerService _healthCheckerService;
         private static ConsoleColor _baseColor;
-        private static object _printLock = new object();
-        private static bool _changed;
-        private static Timer _timer;
 
-        private static void Main(string[] args)
+        private static readonly object PrintLock = new object();
+
+        private static void Main()
         {
             _baseColor = Console.ForegroundColor;
 
@@ -30,42 +28,38 @@ namespace RSB.Diagnostics.HealthChecker
 
             _healthCheckerService = new HealthCheckerService(_bus, components, Properties.Settings.Default.CheckInterval);
 
-            _healthCheckerService.CheckCompleted += OnCheckCompleted;
-
             _healthCheckerService.Start();
 
             Console.WriteLine("Performing initial health check...");
 
-            _timer = new Timer(obj => PrintHealth(), null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
-
-            while (Console.ReadLine() != "exit")
-            { }
+            using (new Timer(obj => PrintHealth(), null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1)))
+            {
+                while (Console.ReadLine() != "exit")
+                {
+                }
+            }
 
             _healthCheckerService.Stop();
         }
 
-        private static void OnCheckCompleted(object sender, System.EventArgs e)
-        {
-            _changed = true;
-        }
-
         private static void PrintHealth()
         {
-            lock (_printLock)
+            var componentsHealths = _healthCheckerService.GetComponentsHealth().OrderBy(c => c.ComponentName);
+
+
+            const int componentColumnWidth = 50;
+            const int stateColumnWidth = 15;
+            const int lastCheckWidth = 15;
+            const int lastFailureWidth = 20;
+            const int responseLatencyWidth = 20;
+
+            var delimeter = "";
+
+            for (var i = 0; i < componentColumnWidth + stateColumnWidth + lastFailureWidth + lastCheckWidth + responseLatencyWidth; i++)
+                delimeter += "-";
+
+            lock (PrintLock)
             {
-                const int componentColumnWidth = 50;
-                const int stateColumnWidth = 15;
-                const int lastCheckWidth = 15;
-                const int lastFailureWidth = 20;
-                const int responseLatencyWidth = 20;
-
-                var delimeter = "";
-
-                for (var i = 0; i < componentColumnWidth + stateColumnWidth + lastFailureWidth + lastCheckWidth + responseLatencyWidth; i++)
-                    delimeter += "-";
-
-                var componentsHealths = _healthCheckerService.GetComponentsHealth().OrderBy(c => c.ComponentName);
-
                 Console.Clear();
                 Console.WriteLine();
                 Console.WriteLine(FormatToWidth("  Component", componentColumnWidth) +

@@ -7,15 +7,9 @@ namespace RSB.Transports.RabbitMQ.Settings
     {
         internal const string PropertyName = "connection";
 
-        public override ConfigurationElementCollectionType CollectionType
-        {
-            get { return ConfigurationElementCollectionType.BasicMapAlternate; }
-        }
+        public override ConfigurationElementCollectionType CollectionType => ConfigurationElementCollectionType.BasicMapAlternate;
 
-        protected override string ElementName
-        {
-            get { return PropertyName; }
-        }
+        protected override string ElementName => PropertyName;
 
         protected override bool IsElementName(string elementName)
         {
@@ -37,12 +31,6 @@ namespace RSB.Transports.RabbitMQ.Settings
             return ((RabbitMqTransportSettings)(element)).Name;
         }
 
-        public RabbitMqTransportSettings this[int idx]
-        {
-            get
-            {
-                return (RabbitMqTransportSettings)BaseGet(idx);
-            }
-        }
+        public RabbitMqTransportSettings this[int idx] => (RabbitMqTransportSettings)BaseGet(idx);
     }
 }

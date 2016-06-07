@@ -6,7 +6,7 @@ namespace RSB.Diagnostics.DiscoveryClient
 {
     class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
             var bus = new Bus(RabbitMqTransport.FromConfigurationFile());
 

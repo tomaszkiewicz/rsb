@@ -41,7 +41,7 @@ namespace RSB.Diagnostics
 
         private void HandleComponentInfoMessage(ComponentInfoMessage componentInfo)
         {
-            var key = string.Format("{0}.{1}.{2}", componentInfo.ModuleName, componentInfo.InstanceName, componentInfo.RunGuid);
+            var key = $"{componentInfo.ModuleName}.{componentInfo.InstanceName}.{componentInfo.RunGuid}";
 
             _components.AddOrUpdate(key, k => componentInfo, (u, c) => componentInfo);
         }

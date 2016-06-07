@@ -58,7 +58,7 @@ namespace RSB
                 ExpirationMilliseconds = expirationSeconds * 1000
             };
 
-            _transport.Broadcast<T>(logicalAddress, properties, obj);
+            _transport.Broadcast(logicalAddress, properties, obj);
         }
 
         public async Task<TResponse> Call<TRequest, TResponse>(TRequest obj, string logicalAddress = "", int timeoutSeconds = 60) where TResponse : new()
@@ -94,7 +94,7 @@ namespace RSB
             }
             catch (TimeoutException ex)
             {
-                throw new InvalidOperationException("Failed to call - timeout");
+                throw new InvalidOperationException("Failed to call - timeout", ex);
             }
 
             try

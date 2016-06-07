@@ -8,7 +8,7 @@ namespace RSB.Diagnostics.HealthChecker.Web
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        private static void Main(string[] args)
+        private static void Main()
         {
             HostFactory.Run(x =>
             {

@@ -32,10 +32,10 @@ namespace RSB.Diagnostics
             _timeoutFactor = timeoutFactor;
 
             if (_timeoutFactor > 1 || _timeoutFactor <= 0)
-                throw new ArgumentOutOfRangeException("timeoutFactor", "timeoutFactor has to be between 0 and 1.");
+                throw new ArgumentOutOfRangeException(nameof(timeoutFactor), "timeoutFactor has to be between 0 and 1.");
 
             if (GetTimeout(GetTimeout(_interval)) == 0)
-                throw new ArgumentOutOfRangeException("interval", "Too low interval for specified timeoutFactor.");
+                throw new ArgumentOutOfRangeException(nameof(interval), "Too low interval for specified timeoutFactor.");
 
             foreach (var componentName in components.OrderBy(s => s))
             {
@@ -63,7 +63,6 @@ namespace RSB.Diagnostics
             _timer = null;
         }
         
-
         private void Run(object stateObj)
         {
             foreach (var component in _components)
@@ -125,7 +124,7 @@ namespace RSB.Diagnostics
 
                     componentHealth.Health = state;
 
-                    if (response != null && response.Subsystems != null)
+                    if (response?.Subsystems != null)
                     {
                         foreach (var kvp in response.Subsystems)
                             componentHealth.Subsystems[kvp.Key] = kvp.Value;
@@ -147,8 +146,7 @@ namespace RSB.Diagnostics
         {
             var handler = CheckCompleted;
 
-            if (handler != null)
-                CheckCompleted(this, new System.EventArgs());
+            handler?.Invoke(this, new System.EventArgs());
         }
 
         public IEnumerable<ComponentHealth> GetComponentsHealth()

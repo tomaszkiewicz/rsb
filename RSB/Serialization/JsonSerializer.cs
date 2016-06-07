@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using RSB.Exceptions;
+using RSB.Interfaces;
 
 namespace RSB.Serialization
 {
@@ -103,7 +104,7 @@ namespace RSB.Serialization
             }
         }
 
-        public string ContentType { get { return "application/json"; } }
-        public string Encoding { get { return "utf8"; } }
+        public string ContentType => "application/json";
+        public string Encoding => "utf8";
     }
 }

@@ -10,12 +10,12 @@ namespace RSB.Diagnostics.HealthChecker.Web.DependencyResolution
         public StructureMapDependencyResolver(IContainer container)
             : base(container)
         {
-            this._container = container;
+            _container = container;
         }
 
         public IDependencyScope BeginScope()
         {
-            var childContainer = this._container.GetNestedContainer();
+            var childContainer = _container.GetNestedContainer();
             return new StructureMapScope(childContainer);
         }
     }

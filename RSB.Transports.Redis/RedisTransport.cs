@@ -80,7 +80,7 @@ namespace RSB.Transports.Redis
             taskFactoryInvokeReceiveAction.CallDispatcher(str);
         }
 
-        public bool IsConnected { get { return _connection.IsConnected; } }
+        public bool IsConnected => _connection.IsConnected;
 
         public void Shutdown()
         {

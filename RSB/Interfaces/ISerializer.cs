@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace RSB.Serialization
+namespace RSB.Interfaces
 {
     public interface ISerializer
     {
