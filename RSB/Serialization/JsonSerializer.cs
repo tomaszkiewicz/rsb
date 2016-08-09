@@ -24,7 +24,7 @@ namespace RSB.Serialization
         {
             _jsonSettings.Converters.Add(new IsoDateTimeConverter()
             {
-                DateTimeFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss.fff'Z'" 
+                DateTimeFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff'Z'" 
             });
 
             _jsonSettings.Converters.Add(new StringEnumConverter()
