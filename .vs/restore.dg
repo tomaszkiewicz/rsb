@@ -1,3 +1,10 @@
+#:D:\Projekty\rsb\RSB\RSB.xproj
+#:D:\Projekty\rsb\RSB.Transports.RabbitMQ\RSB.Transports.RabbitMQ.xproj
+D:\Projekty\rsb\RSB.Transports.RabbitMQ\RSB.Transports.RabbitMQ.xproj|D:\Projekty\rsb\RSB\RSB.xproj
+#:D:\Projekty\rsb\RSB.Tests.Lib\RSB.Tests.Lib.xproj
+D:\Projekty\rsb\RSB.Tests.Lib\RSB.Tests.Lib.xproj|D:\Projekty\rsb\RSB\RSB.xproj
+D:\Projekty\rsb\RSB.Tests.Lib\RSB.Tests.Lib.xproj|D:\Projekty\rsb\RSB.Transports.RabbitMQ\RSB.Transports.RabbitMQ.xproj
+D:\Projekty\rsb\RSB.Transports.RabbitMQ\RSB.Transports.RabbitMQ.xproj|D:\Projekty\rsb\RSB\RSB.xproj
 #:D:\Projekty\rsb\RSB.Tests\RSB.Tests.xproj
 D:\Projekty\rsb\RSB.Tests\RSB.Tests.xproj|D:\Projekty\rsb\RSB\RSB.xproj
 D:\Projekty\rsb\RSB.Tests\RSB.Tests.xproj|D:\Projekty\rsb\RSB.Transports.RabbitMQ\RSB.Transports.RabbitMQ.xproj

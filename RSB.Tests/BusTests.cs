@@ -41,10 +41,11 @@ namespace RSB.Tests
         [TearDown]
         public void Deinit()
         {
+            /*
             _busServer1.Shutdown();
             _busServer2.Shutdown();
             _busClient.Shutdown();
-
+            */
             _busServer1 = null;
             _busServer2 = null;
             _busClient = null;
