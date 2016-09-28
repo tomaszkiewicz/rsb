@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("RSB.Transports.RabbitMQ")]
+[assembly: AssemblyProduct("RSB.CoreTests")]
 [assembly: AssemblyTrademark("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible
@@ -16,4 +16,4 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("b4d9575c-716e-40d3-b1d2-d18fd1225b4f")]
+[assembly: Guid("8dc8d418-5df0-4fc2-801c-3a1c9f09a7b0")]

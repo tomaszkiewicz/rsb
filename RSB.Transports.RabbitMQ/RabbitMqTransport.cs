@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using NLog;
 using RabbitMQ.Client;
 using RSB.Interfaces;
 using RSB.Serialization;
@@ -12,8 +11,6 @@ namespace RSB.Transports.RabbitMQ
 {
     public class RabbitMqTransport : ITransport
     {
-        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
-
         private readonly bool _useDurableExchanges;
         private readonly Connection _connection;
 
@@ -25,6 +22,8 @@ namespace RSB.Transports.RabbitMQ
 
         public static RabbitMqTransport FromConfigurationFile(string connectionName = "")
         {
+            // TODO migrate to IConfiguration
+
             var settings = RabbitMqTransportSettings.FromConfigurationFile(connectionName);
 
             return new RabbitMqTransport(settings);
@@ -51,6 +50,11 @@ namespace RSB.Transports.RabbitMQ
         {
             _useDurableExchanges = useDurableExchanges;
             _connection = new Connection(factory, useDurableExchanges);
+        }
+
+        public Task<bool> WaitForConnection()
+        {
+            return _connection.WaitForConnection();
         }
 
         public IBlockingQueueHandler GetRawBlockingQueueHandler(QueueInfo queueInfo = null)
@@ -111,9 +115,7 @@ namespace RSB.Transports.RabbitMQ
             {
                 if (_eventingHandlers.ContainsKey(key))
                     return;
-
-                _logger.Trace("Subscribing exchange {0} with routing key {1} and queue name {2}", exchangeName, logicalAddress, listenAddress);
-
+                
                 var action = new TaskFactoryInvokeReceiveAction<T>(dispatcher, _serializer, _typeResolver, taskFactory);
 
                 var handler = new EventingQueueHandler(_connection, action, exchangeName, logicalAddress, new QueueInfo(listenAddress), _useDurableExchanges);

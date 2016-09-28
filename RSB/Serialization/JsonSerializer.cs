@@ -13,8 +13,8 @@ namespace RSB.Serialization
         {
             ContractResolver = new CamelCasePropertyNamesContractResolver()
             {
-                IgnoreSerializableInterface = true,
-                IgnoreSerializableAttribute = true,
+                // IgnoreSerializableInterface = true, <- TODO not compatible with .NET Core
+                // IgnoreSerializableAttribute = true, <- TODO not compatible with .NET Core
             },
             DateTimeZoneHandling = DateTimeZoneHandling.Utc,
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore,

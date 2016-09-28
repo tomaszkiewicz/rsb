@@ -51,12 +51,6 @@
     <Compile Include="HealthState.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\RSB\RSB.csproj">
-      <Project>{192B2DD9-8DEF-4212-812E-70CBA1231C9F}</Project>
-      <Name>RSB</Name>
-    </ProjectReference>
-  </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

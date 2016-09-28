@@ -27,9 +27,15 @@ namespace RSB.Tests
         [SetUp]
         public void Init()
         {
-            _busServer1 = new Bus(RabbitMqTransport.FromConfigurationFile());
-            _busServer2 = new Bus(RabbitMqTransport.FromConfigurationFile());
-            _busClient = new Bus(RabbitMqTransport.FromConfigurationFile());
+            var transport1 = RabbitMqTransport.FromConfigurationFile();
+            var transport2 = RabbitMqTransport.FromConfigurationFile();
+            var transport3 = RabbitMqTransport.FromConfigurationFile();
+
+            Task.WaitAll(transport1.WaitForConnection(), transport2.WaitForConnection(), transport3.WaitForConnection());
+
+            _busServer1 = new Bus(transport1);
+            _busServer2 = new Bus(transport2);
+            _busClient = new Bus(transport3);
         }
 
         [TearDown]
@@ -38,10 +44,14 @@ namespace RSB.Tests
             _busServer1.Shutdown();
             _busServer2.Shutdown();
             _busClient.Shutdown();
+
+            _busServer1 = null;
+            _busServer2 = null;
+            _busClient = null;
         }
 
         [Test]
-        public async void CallNoLogicalAddress()
+        public async Task CallNoLogicalAddress()
         {
             _busServer1.RegisterCallHandler<TestRpcRequest, TestRpcResponse>(req => new TestRpcResponse { Content = req.Content, SampleEnum = req.SampleEnum });
 
@@ -52,7 +62,7 @@ namespace RSB.Tests
         }
 
         [Test]
-        public async void CallSameLogicalAddressTwoContracts()
+        public async Task CallSameLogicalAddressTwoContracts()
         {
             _busServer1.RegisterCallHandler<TestRpcRequest, TestRpcResponse>(req => new TestRpcResponse { Content = req.Content }, "Test");
             _busServer1.RegisterCallHandler<TestRpcRequest2, TestRpcResponse2>(req => new TestRpcResponse2 { Content = req.Content }, "Test");
@@ -65,20 +75,20 @@ namespace RSB.Tests
         }
 
         [Test]
-        public async void CallTwoDifferentLogicalAddresses()
+        public async Task CallTwoDifferentLogicalAddresses()
         {
             _busServer1.RegisterCallHandler<TestRpcRequest, TestRpcResponse>(req => new TestRpcResponse { Content = req.Content + Prefix1 }, Server1LogicalAddress);
             _busServer2.RegisterCallHandler<TestRpcRequest, TestRpcResponse>(req => new TestRpcResponse { Content = req.Content + Prefix2 }, Server2LogicalAddress);
 
-            var response1 = await _busServer1.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = TestContent }, Server1LogicalAddress);
-            var response2 = await _busServer1.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = TestContent }, Server2LogicalAddress);
+            var response1 = await _busClient.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = TestContent }, Server1LogicalAddress);
+            var response2 = await _busClient.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = TestContent }, Server2LogicalAddress);
 
             Assert.AreEqual(TestContent + Prefix1, response1.Content);
             Assert.AreEqual(TestContent + Prefix2, response2.Content);
         }
 
         [Test]
-        public async void CallException()
+        public async Task CallException()
         {
             _busServer1.RegisterCallHandler<TestRpcRequest, TestRpcResponse>(req =>
             {
@@ -103,8 +113,7 @@ namespace RSB.Tests
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException))]
-        public async void CallBuiltinException()
+        public async Task CallBuiltinException()
         {
             _busServer1.RegisterCallHandler<TestRpcRequest, TestRpcResponse>(req =>
             {
@@ -113,12 +122,11 @@ namespace RSB.Tests
 
             await Task.Delay(1000);
 
-            await _busServer1.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = "error" });
+            Assert.ThrowsAsync<ArgumentException>(async () => await _busServer1.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = "error" }));
         }
 
         [Test]
-        [ExpectedException(typeof(TimeoutException))]
-        public async void CallTimeout()
+        public void CallTimeout()
         {
             _busServer1.RegisterAsyncCallHandler<TestRpcRequest, TestRpcResponse>(async req =>
             {
@@ -127,20 +135,19 @@ namespace RSB.Tests
                 return new TestRpcResponse();
             });
 
-            await _busClient.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = "error" }, timeoutSeconds: 1);
+            Assert.ThrowsAsync<TimeoutException>(async () => await _busClient.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = "error" }, timeoutSeconds: 1));
         }
 
         [Test]
-        [ExpectedException(typeof(MessageReturnedException))]
-        public async void CallMessageReturned()
+        public async Task CallMessageReturned()
         {
             await Task.Delay(1000);
 
-            await _busClient.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = "error" });
+            Assert.ThrowsAsync<MessageReturnedException>(async () => await _busClient.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = "error" }));
         }
 
         [Test]
-        public async void PublishNoLogicalAddress()
+        public async Task PublishNoLogicalAddress()
         {
             var receivedContent = "";
 
@@ -154,7 +161,7 @@ namespace RSB.Tests
         }
 
         [Test]
-        public async void PublishTwoLogicalAddresses()
+        public async Task PublishTwoLogicalAddresses()
         {
             var receivedContent1 = "";
             var receivedContent2 = "";
@@ -180,7 +187,7 @@ namespace RSB.Tests
         }
 
         [Test]
-        public async void BroadcastNoLogicalAddress()
+        public async Task BroadcastNoLogicalAddress()
         {
             var receivedContent1 = "";
             var receivedContent2 = "";
@@ -197,7 +204,7 @@ namespace RSB.Tests
         }
 
         [Test]
-        public async void BroadcastTwoLogicalAddresses()
+        public async Task BroadcastTwoLogicalAddresses()
         {
             var receivedContent1 = "";
             var receivedContent2 = "";
@@ -279,4 +286,3 @@ namespace RSB.Tests
         public string Content { get; set; }
     }
 }
-

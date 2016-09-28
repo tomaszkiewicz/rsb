@@ -131,14 +131,6 @@
       <Project>{4FBB5BC4-CE8B-406F-A896-318AC4A8914E}</Project>
       <Name>RSB.Diagnostics</Name>
     </ProjectReference>
-    <ProjectReference Include="..\RSB.Transports.RabbitMQ\RSB.Transports.RabbitMQ.csproj">
-      <Project>{C021F4DF-AB9F-4A7A-B580-BFCD46E6B31C}</Project>
-      <Name>RSB.Transports.RabbitMQ</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\RSB\RSB.csproj">
-      <Project>{192B2DD9-8DEF-4212-812E-70CBA1231C9F}</Project>
-      <Name>RSB</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />

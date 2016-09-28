@@ -67,14 +67,6 @@
       <Project>{4fbb5bc4-ce8b-406f-a896-318ac4a8914e}</Project>
       <Name>RSB.Diagnostics</Name>
     </ProjectReference>
-    <ProjectReference Include="..\RSB.Transports.RabbitMQ\RSB.Transports.RabbitMQ.csproj">
-      <Project>{c021f4df-ab9f-4a7a-b580-bfcd46e6b31c}</Project>
-      <Name>RSB.Transports.RabbitMQ</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\RSB\RSB.csproj">
-      <Project>{192b2dd9-8def-4212-812e-70cba1231c9f}</Project>
-      <Name>RSB</Name>
-    </ProjectReference>
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

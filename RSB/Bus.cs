@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
-using NLog;
 using RSB.EventArgs;
 using RSB.Exceptions;
 using RSB.Extensions;
 using RSB.Interfaces;
+using Exception = System.Exception;
 
 namespace RSB
 {
@@ -13,9 +13,9 @@ namespace RSB
     {
         public event EventHandler<BusExceptionEventArgs> DeserializationError;
         public event EventHandler<BusExceptionEventArgs> ExecutionError;
+        public event EventHandler<MessageMalformedEventArgs> MessageMalformed;
 
         private readonly ITransport _transport;
-        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         private readonly ConcurrentDictionary<string, RpcCallHandler> _rpcCallHandlers = new ConcurrentDictionary<string, RpcCallHandler>();
         private readonly string _rpcCallbackLogicalAddressTemplate = "rpc-{0}-" + Guid.NewGuid();
@@ -251,7 +251,7 @@ namespace RSB
 
                 if (string.IsNullOrWhiteSpace(properties.ReplyTo))
                 {
-                    _logger.Warn("Message of type {0} sent as RPC call, but no ReplyTo property specified", GetMessageType<TRequest>());
+                    MessageMalformed?.Invoke(this, new MessageMalformedEventArgs("Message has no ReplyTo field set, so RSB cannot respond."));
 
                     return;
                 }
@@ -294,14 +294,14 @@ namespace RSB
 
             if (correlationId == null)
             {
-                _logger.Warn("Got null correlationId for response message type {0}", properties.Type);
+                MessageMalformed?.Invoke(this, new MessageMalformedEventArgs($"Got null correlationId for response message type {properties.Type}"));
 
                 return;
             }
 
             if (!_rpcCallHandlers.TryRemove(correlationId, out handler))
             {
-                _logger.Warn("Got unmapped correlationId ({0}) for response message type {1}", correlationId, properties.Type);
+                MessageMalformed?.Invoke(this, new MessageMalformedEventArgs("Got unmapped correlationId ({correlationId}) for response message type {properties.Type}"));
 
                 return;
             }
@@ -329,18 +329,12 @@ namespace RSB
             {
                 if (ex is SerializationException)
                 {
-                    _logger.Warn(ex, "Failed to deserialize/serialize message.");
-
                     RaiseBusExceptionEvent(DeserializationError, ex, message);
                 }
                 else
                 {
-                    _logger.Warn(ex, "Handler threw an exception.");
-
                     RaiseBusExceptionEvent(ExecutionError, ex, message);
                 }
-
-                _logger.Error(ex, ex.Message);
 
                 return ex;
             }
@@ -348,9 +342,7 @@ namespace RSB
 
         private void RaiseBusExceptionEvent<T>(EventHandler<BusExceptionEventArgs> raiseEventHandler, Exception ex, Message<T> message)
         {
-            var eventHandler = raiseEventHandler;
-
-            eventHandler?.Invoke(this, new BusExceptionEventArgs()
+            raiseEventHandler?.Invoke(this, new BusExceptionEventArgs()
             {
                 Exception = ex,
                 Message = message,

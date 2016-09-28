@@ -3,18 +3,17 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using NLog;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
 using RabbitMQ.Client.Framing;
+using RSB.EventArgs;
 using RSB.Exceptions;
 
 namespace RSB.Transports.RabbitMQ
 {
     internal class Connection
     {
-        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
         private readonly IConnectionFactory _factory;
         private readonly bool _useDurableExchanges;
         private readonly object _connectionLock = new object();
@@ -25,6 +24,8 @@ namespace RSB.Transports.RabbitMQ
 
         public event EventHandler<ShutdownEventArgs> ConnectionShutdown;
         public event EventHandler ConnectionRestored;
+        public event EventHandler ConnectionLost;
+        public event EventHandler<ReconnectFailedEventArgs> ReconnectFailed;
 
         private readonly ConcurrentDictionary<string, bool> _exchanges = new ConcurrentDictionary<string, bool>();
 
@@ -33,6 +34,9 @@ namespace RSB.Transports.RabbitMQ
         private readonly ChannelTcsIndex _callChannelTcsIndex = new ChannelTcsIndex();
         private readonly object _reconnectLock = new object();
         private Thread _reconnectThread;
+
+        private TaskCompletionSource<bool> _connectionTsc;
+        private readonly object _connectionTscLock = new object();
 
         public bool IsConnected
         {
@@ -45,6 +49,21 @@ namespace RSB.Transports.RabbitMQ
             _useDurableExchanges = useDurableExchanges;
 
             StartReconnectThread();
+        }
+
+        public Task<bool> WaitForConnection()
+        {
+            lock (_connectionLock)
+                if (_connection != null && _connection.IsOpen)
+                    return Task.FromResult(true);
+
+            lock (_connectionTscLock)
+            {
+                if (_connectionTsc == null)
+                    _connectionTsc = new TaskCompletionSource<bool>();
+            }
+
+            return _connectionTsc.Task;
         }
 
         private void Reconnect()
@@ -191,29 +210,28 @@ namespace RSB.Transports.RabbitMQ
                             if (!(_connection == null || !_connection.IsOpen))
                                 break;
 
-                        _logger.Info("Trying to reconnect to RabbitMQ...");
-
                         Reconnect();
 
-                        _logger.Info("Reconnect succeeded. The connection restored. All subscriptions restored.");
+                        ConnectionRestored?.Invoke(this, new System.EventArgs());
 
-                        RaiseConnectionRestored();
+                        lock (_connectionTscLock)
+                            _connectionTsc?.TrySetResult(true);
                     }
                     catch (BrokerUnreachableException ex)
                     {
-                        _logger.Error(ex, "Reconnect failed: RabbitMQ broker is unrechable.");
+                        ReconnectFailed?.Invoke(this, new ReconnectFailedEventArgs(ex, "Reconnect failed: RabbitMQ broker is unrechable."));
 
                         Thread.Sleep(5000);
                     }
                     catch (EndOfStreamException ex)
                     {
-                        _logger.Error(ex, "Reconnect failed: EndOfStreamException.");
+                        ReconnectFailed?.Invoke(this, new ReconnectFailedEventArgs(ex, "Reconnect failed: EndOfStreamException."));
 
                         Thread.Sleep(5000);
                     }
                     catch (Exception ex)
                     {
-                        _logger.Error(ex, "Reconnect failed due to exception");
+                        ReconnectFailed?.Invoke(this, new ReconnectFailedEventArgs(ex, "Reconnect failed due to exception"));
 
                         Thread.Sleep(5000);
                     }
@@ -226,19 +244,12 @@ namespace RSB.Transports.RabbitMQ
             }
         }
 
-        private void RaiseConnectionRestored()
-        {
-            var handler = ConnectionRestored;
-
-            handler?.Invoke(this, new System.EventArgs());
-        }
-
         private void OnConnectionShutdown(object connection, ShutdownEventArgs reason)
         {
             if (_shutdown)
                 return;
 
-            _logger.Warn("Connection to RabbitMQ has been lost.");
+            ConnectionLost?.Invoke(this, new System.EventArgs());
 
             StartReconnectThread();
         }

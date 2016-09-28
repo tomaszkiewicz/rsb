@@ -53,12 +53,6 @@
     <Compile Include="TaskFactoryInvokeReceiveAction.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\RSB\RSB.csproj">
-      <Project>{192B2DD9-8DEF-4212-812E-70CBA1231C9F}</Project>
-      <Name>RSB</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

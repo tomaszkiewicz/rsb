@@ -1,71 +1,52 @@
 ﻿using System;
-using System.Configuration;
+using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
 
 namespace RSB.Transports.RabbitMQ.Settings
 {
-    public class RabbitMqTransportSettings : ConfigurationElement
+    public class RabbitMqTransportSettings
     {
-        public static RabbitMqTransportSettings FromConfigurationFile(string name = "")
+        public static RabbitMqTransportSettings FromConfigurationFile(string connectionName = "")
         {
-            var connections = ((RabbitMqTransportSettingsSection)ConfigurationManager.GetSection("rabbitMqTransport")).Connections;
+            if(!string.IsNullOrWhiteSpace(connectionName))
+                throw new NotImplementedException("Not implemented yet in .NET Core version.");
 
-            if (string.IsNullOrWhiteSpace(name) && connections.Count == 1)
-                return connections[0];
+            var settings = new RabbitMqTransportSettings();
 
-            for (var i = 0; i < connections.Count; i++)
-                if (connections[i].Name == name)
-                    return connections[i];
+            var builder = new ConfigurationBuilder();
 
-            throw new InvalidOperationException("RabbitMqTransportSettings with specified name was not found.");
+            builder.AddInMemoryCollection(new Dictionary<string, string>()
+            {
+                { "hostname", "localhost" },
+                { "username", "guest" },
+                { "password", "guest" },
+                { "virtualHost", "/" },
+                { "useDurableExchanges", "true" },
+                { "heartbeat", "30" },
+                { "name", "default" }
+            });
+
+            builder.AddJsonFile("rsb.json");
+
+            var config = builder.Build();
+
+            settings.Hostname = config["hostname"];
+            settings.Name = config["name"];
+            settings.Username = config["username"];
+            settings.Password = config["password"];
+            settings.VirtualHost = config["virtualHost"];
+            settings.UseDurableExchanges = bool.Parse(config["useDurableExchanges"]);
+            settings.Heartbeat = ushort.Parse(config["heartbeat"]);
+
+            return settings;
         }
 
-        [ConfigurationProperty("name", DefaultValue = "", IsKey = true, IsRequired = false)]
-        public string Name
-        {
-            get { return (string)this["name"]; }
-            set { this["name"] = value; }
-        }
-
-        [ConfigurationProperty("heartbeat", IsRequired = false, DefaultValue = (ushort)5)]
-        public ushort Heartbeat
-        {
-            get { return (ushort)this["heartbeat"]; }
-            set { this["heartbeat"] = value; }
-        }
-
-        [ConfigurationProperty("hostname", IsRequired = true)]
-        public string Hostname
-        {
-            get { return (string)this["hostname"]; }
-            set { this["hostname"] = value; }
-        }
-
-        [ConfigurationProperty("username", IsRequired = false, DefaultValue = "guest")]
-        public string Username
-        {
-            get { return (string)this["username"]; }
-            set { this["username"] = value; }
-        }
-
-        [ConfigurationProperty("password", IsRequired = false, DefaultValue = "guest")]
-        public string Password
-        {
-            get { return (string)this["password"]; }
-            set { this["password"] = value; }
-        }
-        
-        [ConfigurationProperty("virtualHost", IsRequired = false, DefaultValue = "/")]
-        public string VirtualHost
-        {
-            get { return (string)this["virtualHost"]; }
-            set { this["virtualHost"] = value; }
-        }
-
-        [ConfigurationProperty("useDurableExchanges", IsRequired = false, DefaultValue = true)]
-        public bool UseDurableExchanges
-        {
-            get { return (bool)this["useDurableExchanges"]; }
-            set { this["useDurableExchanges"] = value; }
-        }
+        public string Name { get; set; }
+        public ushort Heartbeat { get; set; }
+        public string Hostname { get; set; }
+        public string Username { get; set; }
+        public string Password { get; set; }
+        public string VirtualHost { get; set; }
+        public bool UseDurableExchanges { get; set; }
     }
 }
