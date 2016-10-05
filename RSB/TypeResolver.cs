@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Microsoft.Extensions.DependencyModel;
 
 namespace RSB
 {
@@ -65,13 +66,17 @@ namespace RSB
             if (type != null)
                 yield return type;
             
-            foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
+            var assemblyNames = DependencyContext.Default.GetDefaultAssemblyNames();
+
+            foreach (var assemblyName in assemblyNames)
             {
-                foreach (var typeFromAssembly in a.GetTypes())
+                var assembly = Assembly.Load(new AssemblyName(assemblyName.Name));
+
+                foreach (var typeFromAssembly in assembly.GetExportedTypes())
                 {
                     if (!typeof(Exception).IsAssignableFrom(typeFromAssembly))
                         continue;
-
+                    
                     if (typeFromAssembly.Name == typeName)
                         yield return typeFromAssembly;
                 }

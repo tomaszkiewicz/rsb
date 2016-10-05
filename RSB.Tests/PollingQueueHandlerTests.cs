@@ -35,7 +35,7 @@ namespace RSB.Tests
         }
 
         [Test]
-        public async void TestGet()
+        public async Task TestGet()
         {
             var queueHandler = _transport1.GetRawPollingQueueHandler(new QueueInfo("TestMessage"));
 

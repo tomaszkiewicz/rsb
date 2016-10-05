@@ -41,11 +41,10 @@ namespace RSB.Tests
         [TearDown]
         public void Deinit()
         {
-            /*
             _busServer1.Shutdown();
             _busServer2.Shutdown();
             _busClient.Shutdown();
-            */
+
             _busServer1 = null;
             _busServer2 = null;
             _busClient = null;
@@ -68,11 +67,11 @@ namespace RSB.Tests
             _busServer1.RegisterCallHandler<TestRpcRequest, TestRpcResponse>(req => new TestRpcResponse { Content = req.Content }, "Test");
             _busServer1.RegisterCallHandler<TestRpcRequest2, TestRpcResponse2>(req => new TestRpcResponse2 { Content = req.Content }, "Test");
 
-            var response1 = await _busClient.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = TestContent }, "Test");
-            var response2 = await _busClient.Call<TestRpcRequest2, TestRpcResponse2>(new TestRpcRequest2 { Content = TestContent }, "Test");
+            var response1 = await _busClient.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = TestContent + Prefix1 }, "Test");
+            var response2 = await _busClient.Call<TestRpcRequest2, TestRpcResponse2>(new TestRpcRequest2 { Content = TestContent + Prefix2 }, "Test");
 
-            Assert.AreEqual(TestContent, response1.Content);
-            Assert.AreEqual(TestContent, response2.Content);
+            Assert.AreEqual(TestContent + Prefix1, response1.Content);
+            Assert.AreEqual(TestContent + Prefix2, response2.Content);
         }
 
         [Test]
@@ -80,6 +79,8 @@ namespace RSB.Tests
         {
             _busServer1.RegisterCallHandler<TestRpcRequest, TestRpcResponse>(req => new TestRpcResponse { Content = req.Content + Prefix1 }, Server1LogicalAddress);
             _busServer2.RegisterCallHandler<TestRpcRequest, TestRpcResponse>(req => new TestRpcResponse { Content = req.Content + Prefix2 }, Server2LogicalAddress);
+
+            await Task.Delay(1000);
 
             var response1 = await _busClient.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = TestContent }, Server1LogicalAddress);
             var response2 = await _busClient.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = TestContent }, Server2LogicalAddress);
@@ -123,11 +124,11 @@ namespace RSB.Tests
 
             await Task.Delay(1000);
 
-            Assert.ThrowsAsync<ArgumentException>(async () => await _busServer1.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = "error" }));
+            await AssertException<ArgumentException>(async () => await _busServer1.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = "error" }));
         }
 
         [Test]
-        public void CallTimeout()
+        public async Task CallTimeout()
         {
             _busServer1.RegisterAsyncCallHandler<TestRpcRequest, TestRpcResponse>(async req =>
             {
@@ -136,7 +137,11 @@ namespace RSB.Tests
                 return new TestRpcResponse();
             });
 
-            Assert.ThrowsAsync<TimeoutException>(async () => await _busClient.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = "error" }, timeoutSeconds: 1));
+            await Task.Delay(1000);
+
+            await AssertException<TimeoutException>(async () => await _busClient.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = "error" }, timeoutSeconds: 1));
+            
+            await Task.Delay(2000);
         }
 
         [Test]
@@ -144,7 +149,7 @@ namespace RSB.Tests
         {
             await Task.Delay(1000);
 
-            Assert.ThrowsAsync<MessageReturnedException>(async () => await _busClient.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = "error" }));
+            await AssertException<MessageReturnedException>(async () => await _busClient.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = "error" }, "NonExisting"));
         }
 
         [Test]
@@ -229,6 +234,24 @@ namespace RSB.Tests
             Assert.AreEqual("", receivedContent1);
             Assert.AreEqual(TestContent + Prefix2, receivedContent2);
 
+        }
+
+        private async Task AssertException<T>(Func<Task> func) where T : Exception
+        {
+            try
+            {
+                await func();
+
+                Assert.Fail("No exception caught.");
+            }
+            catch (T)
+            {
+                // ok :)
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail($"Invalid exception thrown. Expecting {typeof(T).FullName} but was {ex.GetType().FullName}");
+            }
         }
     }
 
