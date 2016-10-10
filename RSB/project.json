@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0-*",
+  "version": "0.10.0-*",
 
   "dependencies": {
     "Microsoft.Extensions.DependencyModel": "1.0.0",
@@ -10,6 +10,14 @@
   "frameworks": {
     "netstandard1.6": {
       "imports": "dnxcore50"
+    },
+    "net461": {
+
     }
+  },
+
+  "packOptions": {
+    "licenseUrl": "https://github.com/tomaszkiewicz/rsb/blob/master/LICENSE",
+    "projectUrl": "https://github.com/tomaszkiewicz/rsb"
   }
 }

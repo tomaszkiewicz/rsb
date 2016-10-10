@@ -1,4 +1,4 @@
-﻿{
+{
   "version": "1.0.0-*",
   "buildOptions": {
     "emitEntryPoint": true
@@ -9,17 +9,13 @@
       "type": "platform",
       "version": "1.0.1"
     },
-    "NUnit": "3.4.1",
     "RSB": "0.10.0-*",
-    "RSB.Transports.RabbitMQ": "1.0.0-*",
-    "NUnitLite": "3.4.1"
+    "RSB.Transports.RabbitMQ": "1.0.0-*"
   },
 
   "frameworks": {
     "netcoreapp1.0": {
       "imports": "dnxcore50"
     }
-  },
-
-  "content": [ "rsb.json" ]
+  }
 }

@@ -22,8 +22,6 @@ namespace RSB.Transports.RabbitMQ
 
         public static RabbitMqTransport FromConfigurationFile(string connectionName = "")
         {
-            // TODO migrate to IConfiguration
-
             var settings = RabbitMqTransportSettings.FromConfigurationFile(connectionName);
 
             return new RabbitMqTransport(settings);
