@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using NUnit.Framework;
+using Microsoft.Extensions.Testing.Abstractions;
 using RSB.Exceptions;
 using RSB.Interfaces;
 using RSB.Transports.RabbitMQ;
+using Xunit;
 
 namespace RSB.Tests
 {
-    [TestFixture]
     public class BusTests
     {
         private IBus _busServer1;
@@ -24,8 +24,7 @@ namespace RSB.Tests
 
         private const int WaitTimeoutMilliseconds = 500;
 
-        [SetUp]
-        public void Init()
+        public BusTests()
         {
             var transport1 = RabbitMqTransport.FromConfigurationFile();
             var transport2 = RabbitMqTransport.FromConfigurationFile();
@@ -37,8 +36,7 @@ namespace RSB.Tests
             _busServer2 = new Bus(transport2);
             _busClient = new Bus(transport3);
         }
-
-        [TearDown]
+        
         public void Deinit()
         {
             _busServer1.Shutdown();
@@ -50,18 +48,18 @@ namespace RSB.Tests
             _busClient = null;
         }
 
-        [Test]
+        [Fact]
         public async Task CallNoLogicalAddress()
         {
             _busServer1.RegisterCallHandler<TestRpcRequest, TestRpcResponse>(req => new TestRpcResponse { Content = req.Content, SampleEnum = req.SampleEnum });
 
             var response = await _busServer1.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = TestContent, SampleEnum = SampleEnum.Third });
 
-            Assert.AreEqual(TestContent, response.Content);
-            Assert.AreEqual(SampleEnum.Third, response.SampleEnum);
+            Assert.Equal(TestContent, response.Content);
+            Assert.Equal(SampleEnum.Third, response.SampleEnum);
         }
 
-        [Test]
+        [Fact]
         public async Task CallSameLogicalAddressTwoContracts()
         {
             _busServer1.RegisterCallHandler<TestRpcRequest, TestRpcResponse>(req => new TestRpcResponse { Content = req.Content }, "Test");
@@ -70,11 +68,11 @@ namespace RSB.Tests
             var response1 = await _busClient.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = TestContent + Prefix1 }, "Test");
             var response2 = await _busClient.Call<TestRpcRequest2, TestRpcResponse2>(new TestRpcRequest2 { Content = TestContent + Prefix2 }, "Test");
 
-            Assert.AreEqual(TestContent + Prefix1, response1.Content);
-            Assert.AreEqual(TestContent + Prefix2, response2.Content);
+            Assert.Equal(TestContent + Prefix1, response1.Content);
+            Assert.Equal(TestContent + Prefix2, response2.Content);
         }
 
-        [Test]
+        [Fact]
         public async Task CallTwoDifferentLogicalAddresses()
         {
             _busServer1.RegisterCallHandler<TestRpcRequest, TestRpcResponse>(req => new TestRpcResponse { Content = req.Content + Prefix1 }, Server1LogicalAddress);
@@ -85,11 +83,11 @@ namespace RSB.Tests
             var response1 = await _busClient.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = TestContent }, Server1LogicalAddress);
             var response2 = await _busClient.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = TestContent }, Server2LogicalAddress);
 
-            Assert.AreEqual(TestContent + Prefix1, response1.Content);
-            Assert.AreEqual(TestContent + Prefix2, response2.Content);
+            Assert.Equal(TestContent + Prefix1, response1.Content);
+            Assert.Equal(TestContent + Prefix2, response2.Content);
         }
 
-        [Test]
+        [Fact]
         public async Task CallException()
         {
             _busServer1.RegisterCallHandler<TestRpcRequest, TestRpcResponse>(req =>
@@ -106,15 +104,15 @@ namespace RSB.Tests
             {
                 await _busServer1.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = "error" });
 
-                Assert.Fail("Exception not thrown");
+                Assert.True(false, "Exception not thrown");
             }
             catch (CustomException ex)
             {
-                Assert.AreEqual("Test property", ex.CustomProperty);
+                Assert.Equal("Test property", ex.CustomProperty);
             }
         }
 
-        [Test]
+        [Fact]
         public async Task CallBuiltinException()
         {
             _busServer1.RegisterCallHandler<TestRpcRequest, TestRpcResponse>(req =>
@@ -127,7 +125,7 @@ namespace RSB.Tests
             await AssertException<ArgumentException>(async () => await _busServer1.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = "error" }));
         }
 
-        [Test]
+        [Fact]
         public async Task CallTimeout()
         {
             _busServer1.RegisterAsyncCallHandler<TestRpcRequest, TestRpcResponse>(async req =>
@@ -144,7 +142,7 @@ namespace RSB.Tests
             await Task.Delay(2000);
         }
 
-        [Test]
+        [Fact]
         public async Task CallMessageReturned()
         {
             await Task.Delay(1000);
@@ -152,7 +150,7 @@ namespace RSB.Tests
             await AssertException<MessageReturnedException>(async () => await _busClient.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = "error" }, "NonExisting"));
         }
 
-        [Test]
+        [Fact]
         public async Task PublishNoLogicalAddress()
         {
             var receivedContent = "";
@@ -163,10 +161,10 @@ namespace RSB.Tests
 
             await Task.Delay(WaitTimeoutMilliseconds);
 
-            Assert.AreEqual(TestContent, receivedContent);
+            Assert.Equal(TestContent, receivedContent);
         }
 
-        [Test]
+        [Fact]
         public async Task PublishTwoLogicalAddresses()
         {
             var receivedContent1 = "";
@@ -179,8 +177,8 @@ namespace RSB.Tests
 
             await Task.Delay(WaitTimeoutMilliseconds);
 
-            Assert.AreEqual(TestContent + Prefix1, receivedContent1);
-            Assert.AreEqual("", receivedContent2);
+            Assert.Equal(TestContent + Prefix1, receivedContent1);
+            Assert.Equal("", receivedContent2);
 
             receivedContent1 = "";
 
@@ -188,11 +186,11 @@ namespace RSB.Tests
 
             await Task.Delay(WaitTimeoutMilliseconds);
 
-            Assert.AreEqual("", receivedContent1);
-            Assert.AreEqual(TestContent + Prefix2, receivedContent2);
+            Assert.Equal("", receivedContent1);
+            Assert.Equal(TestContent + Prefix2, receivedContent2);
         }
 
-        [Test]
+        [Fact]
         public async Task BroadcastNoLogicalAddress()
         {
             var receivedContent1 = "";
@@ -205,11 +203,11 @@ namespace RSB.Tests
 
             await Task.Delay(WaitTimeoutMilliseconds);
 
-            Assert.AreEqual(TestContent, receivedContent1);
-            Assert.AreEqual(TestContent, receivedContent2);
+            Assert.Equal(TestContent, receivedContent1);
+            Assert.Equal(TestContent, receivedContent2);
         }
 
-        [Test]
+        [Fact]
         public async Task BroadcastTwoLogicalAddresses()
         {
             var receivedContent1 = "";
@@ -222,8 +220,8 @@ namespace RSB.Tests
 
             await Task.Delay(WaitTimeoutMilliseconds);
 
-            Assert.AreEqual(TestContent + Prefix1, receivedContent1);
-            Assert.AreEqual("", receivedContent2);
+            Assert.Equal(TestContent + Prefix1, receivedContent1);
+            Assert.Equal("", receivedContent2);
 
             receivedContent1 = "";
 
@@ -231,8 +229,8 @@ namespace RSB.Tests
 
             await Task.Delay(WaitTimeoutMilliseconds);
 
-            Assert.AreEqual("", receivedContent1);
-            Assert.AreEqual(TestContent + Prefix2, receivedContent2);
+            Assert.Equal("", receivedContent1);
+            Assert.Equal(TestContent + Prefix2, receivedContent2);
 
         }
 
@@ -242,7 +240,7 @@ namespace RSB.Tests
             {
                 await func();
 
-                Assert.Fail("No exception caught.");
+                Assert.True(false, "No exception caught.");
             }
             catch (T)
             {
@@ -250,7 +248,7 @@ namespace RSB.Tests
             }
             catch (Exception ex)
             {
-                Assert.Fail($"Invalid exception thrown. Expecting {typeof(T).FullName} but was {ex.GetType().FullName}");
+                Assert.True(false, $"Invalid exception thrown. Expecting {typeof(T).FullName} but was {ex.GetType().FullName}");
             }
         }
     }
@@ -269,6 +267,10 @@ namespace RSB.Tests
         }
 
         public string CustomProperty { get; set; }
+    }
+
+    public abstract class Message
+    {
     }
 
     public class TestMessage : Message

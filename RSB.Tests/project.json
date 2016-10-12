@@ -1,25 +1,28 @@
 ﻿{
   "version": "1.0.0-*",
-  "buildOptions": {
-    "emitEntryPoint": true
-  },
-
+  "testRunner": "xunit",
   "dependencies": {
-    "Microsoft.NETCore.App": {
-      "type": "platform",
-      "version": "1.0.1"
-    },
-    "NUnit": "3.4.1",
+    "NETStandard.Library": "1.6.0",
+    "xunit": "2.2.0-beta2-build3300",
+    "dotnet-test-xunit": "2.2.0-preview2-build1029",
     "RSB": "0.10.0-*",
-    "RSB.Transports.RabbitMQ": "1.0.0-*",
-    "NUnitLite": "3.4.1"
+    "RSB.Transports.RabbitMQ": "1.0.0-*"
   },
 
   "frameworks": {
     "netcoreapp1.0": {
-      "imports": "dnxcore50"
+      "dependencies": {
+        "Microsoft.NETCore.App": {
+          "type": "platform",
+          "version": "1.0.0"
+        }
+      }
     }
   },
 
-  "content": [ "rsb.json" ]
+  "buildOptions": {
+    "copyToOutput": {
+      "include": [ "rsb.json" ]
+    }
+  }
 }

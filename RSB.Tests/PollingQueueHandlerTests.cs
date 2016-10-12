@@ -1,13 +1,13 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
+using Newtonsoft.Json;
 using RSB.Interfaces;
 using RSB.Serialization;
 using RSB.Transports.RabbitMQ;
+using Xunit;
 
 namespace RSB.Tests
 {
-    [TestFixture]
     class PollingQueueHandlerTests
     {
         private IBus _bus1;
@@ -15,8 +15,7 @@ namespace RSB.Tests
         private RabbitMqTransport _transport1;
         private RabbitMqTransport _transport2;
 
-        [SetUp]
-        public void Init()
+        public PollingQueueHandlerTests()
         {
             _transport1 = RabbitMqTransport.FromConfigurationFile();
             _transport2 = RabbitMqTransport.FromConfigurationFile();
@@ -27,14 +26,13 @@ namespace RSB.Tests
             Thread.Sleep(1000);
         }
 
-        [TearDown]
         public void Deinit()
         {
             _bus1.Shutdown();
             _bus2.Shutdown();
         }
 
-        [Test]
+        [Fact]
         public async Task TestGet()
         {
             var queueHandler = _transport1.GetRawPollingQueueHandler(new QueueInfo("TestMessage"));
@@ -47,13 +45,13 @@ namespace RSB.Tests
 
             var item = queueHandler.GetItem();
 
-            Assert.AreNotEqual(null, item);
+            Assert.NotEqual(null, item);
 
-            var serializer = new JsonSerializer();
+            var serializer = new Serialization.JsonSerializer();
 
             var msg = serializer.Deserialize<TestMessage>(item.Body);
 
-            Assert.AreEqual("Test", msg.Content);
+            Assert.Equal("Test", msg.Content);
         }
 
         class TestMessage
