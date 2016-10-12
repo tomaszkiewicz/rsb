@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using RabbitMQ.Client;
 using RSB.Interfaces;
 using RSB.Serialization;
+using RSB.Transports.RabbitMQ.Extensions;
 using RSB.Transports.RabbitMQ.QueueHandlers;
 using RSB.Transports.RabbitMQ.Settings;
 

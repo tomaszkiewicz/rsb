@@ -67,16 +67,7 @@ namespace RSB
 
             var tcs = new TaskCompletionSource<object>();
             var rpcLogicalAddress = string.Format(_rpcCallbackLogicalAddressTemplate, GetMessageType<TResponse>());
-
-            var correlationId = Guid.NewGuid().ToString();
-
-            var handler = new RpcCallHandler
-            {
-                ResponseType = typeof(TResponse),
-                TaskCompletion = tcs,
-            };
-
-            _rpcCallHandlers[correlationId] = handler;
+            var correlationId = InternalRegisterCallHandler<TResponse>(tcs);
 
             _transport.Subscribe<TResponse>(RpcCallDispatcher, rpcLogicalAddress, rpcLogicalAddress);
 
@@ -90,7 +81,7 @@ namespace RSB
 
             try
             {
-                await _transport.Call(logicalAddress, properties, obj).TimeoutAfter(5);
+                await _transport.Call(logicalAddress, properties, obj).TimeoutAfter(5).ConfigureAwait(false);
             }
             catch (TimeoutException ex)
             {
@@ -99,14 +90,36 @@ namespace RSB
 
             try
             {
-                return (TResponse)await tcs.Task.TimeoutAfter(timeoutSeconds);
+                return (TResponse)await tcs.Task.TimeoutAfter(timeoutSeconds).ConfigureAwait(false);
             }
             catch (TimeoutException)
             {
-                _rpcCallHandlers.TryRemove(correlationId, out handler);
-
+                InternalUnregisterCallHandler(correlationId);
+                
                 throw;
             }
+        }
+
+        private string InternalRegisterCallHandler<T>(TaskCompletionSource<object> tcs)
+        {
+            var correlationId = Guid.NewGuid().ToString();
+
+            var handler = new RpcCallHandler
+            {
+                ResponseType = typeof(T),
+                TaskCompletion = tcs,
+            };
+
+            _rpcCallHandlers[correlationId] = handler;
+
+            return correlationId;
+        }
+
+        private void InternalUnregisterCallHandler(string correlationId)
+        {
+            RpcCallHandler handler;
+
+            _rpcCallHandlers.TryRemove(correlationId, out handler);
         }
 
         public void PrepareEnqueue<T>() where T : new()

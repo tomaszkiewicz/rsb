@@ -4,7 +4,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Framing;
 
-namespace RSB.Transports.RabbitMQ
+namespace RSB.Transports.RabbitMQ.Extensions
 {
     static class Converters
     {

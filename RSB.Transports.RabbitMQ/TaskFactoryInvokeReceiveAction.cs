@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using RabbitMQ.Client.Events;
 using RSB.Exceptions;
 using RSB.Interfaces;
+using RSB.Transports.RabbitMQ.Extensions;
 
 namespace RSB.Transports.RabbitMQ
 {
