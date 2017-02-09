@@ -80,7 +80,6 @@ namespace RSB.Transports.RabbitMQ
                             try
                             {
                                 _publishChannel.Dispose();
-
                             }
                             catch
                             {
@@ -112,6 +111,9 @@ namespace RSB.Transports.RabbitMQ
                         }
 
                         _exchanges.Clear();
+
+                        if (_shutdown)
+                            return;
 
                         _connection = _factory.CreateConnection();
 
@@ -176,7 +178,12 @@ namespace RSB.Transports.RabbitMQ
         public IModel GetChannel()
         {
             lock (_connectionLock)
+            {
+                if (_connection == null)
+                    throw new NotConnectedException();
+
                 return _connection.CreateModel();
+            }
         }
 
         private void ReconnectThreadRun()
@@ -188,7 +195,7 @@ namespace RSB.Transports.RabbitMQ
                     try
                     {
                         lock (_connectionLock)
-                            if (!(_connection == null || !_connection.IsOpen))
+                            if (!(_connection == null || !_connection.IsOpen) || _shutdown)
                                 break;
 
                         _logger.Info("Trying to reconnect to RabbitMQ...");
@@ -281,7 +288,7 @@ namespace RSB.Transports.RabbitMQ
             lock (_publishChannelLock)
             {
                 if (_exchanges.TryAdd(messageType, true))
-                    _publishChannel.ExchangeDeclare(messageType, "topic", _useDurableExchanges);
+                    _publishChannel?.ExchangeDeclare(messageType, "topic", _useDurableExchanges);
             }
         }
 
@@ -290,7 +297,14 @@ namespace RSB.Transports.RabbitMQ
             lock (_publishChannelLock)
             {
                 if (_exchanges.TryAdd(messageType, true))
-                    _publishChannel.ExchangeDeclare(messageType, "topic", _useDurableExchanges);
+                    _publishChannel?.ExchangeDeclare(messageType, "topic", _useDurableExchanges);
+
+                if (_publishChannel == null)
+                {
+                    StartReconnectThread();
+
+                    throw new NotConnectedException();
+                }
 
                 _publishChannel.BasicPublish(messageType, routingKey, properties, body);
             }
@@ -301,8 +315,9 @@ namespace RSB.Transports.RabbitMQ
             _shutdown = true;
 
             lock (_connectionLock)
-                if (_connection.IsOpen)
-                    _connection.Close();
+                if (_connection != null)
+                    if (_connection.IsOpen)
+                        _connection.Close();
         }
     }
 }

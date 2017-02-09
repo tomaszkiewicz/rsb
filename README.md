@@ -296,7 +296,8 @@ No known issues at the moment.
 
 ## Release history
 
+* 2017-02-09 - v0.10.* - Fixed issues related to Shutdown method when not connected.
 * 2017-02-09 - v0.9.* - Fixed Message property deserialization in exceptions.
 * 2016-04-01 - v0.9.* - Added UseBusDiagnostics extension. It will replace BusDiagnostics constructor in the future.
-* 2016-03-14 - v0.9.* - Added configuration section for RabbitMQ transport
-* 2015-12-11 - v0.9.* - Initial public release
+* 2016-03-14 - v0.9.* - Added configuration section for RabbitMQ transport.
+* 2015-12-11 - v0.9.* - Initial public release.
