@@ -1,6 +1,8 @@
 RSB
 =========
 
+[![Build status](https://ci.appveyor.com/api/projects/status/ofxttdfqyiatougt?svg=true)](https://ci.appveyor.com/project/tomaszkiewicz/rsb)
+
 ## Installation
 
 At this moment, the only fully implemented transport is RabbitMQ, so to install RSB with RabbitMQ transport just install the following NuGet package:
@@ -111,13 +113,13 @@ We recommend using the following conventions:
 
 ### Queuing messages
 
-The simplest pattern implemented in RSB is queue of messages. 
+The simplest pattern implemented in RSB is queue of messages.
 In this pattern sender enqueues message to be processed by workers.
 
 Let's define contract:
 
 ```
-public class SampleMessage 
+public class SampleMessage
 {
     public string Content { get; set; }
 }
@@ -152,7 +154,7 @@ Broadcasting allows sender to send message to multiple nodes.
 We use the same contract as before:
 
 ```
-public class SampleMessage 
+public class SampleMessage
 {
     public string Content { get; set; }
 }
@@ -180,7 +182,7 @@ The message will be send to RabbitMQ and then dispatched to all connected worker
 
 ### Remote procedure calls
 
-Another pattern implemented in RSB is Remote Procedure Call (RPC). 
+Another pattern implemented in RSB is Remote Procedure Call (RPC).
 In this pattern caller sends request message to callee, callee processes message and sends response to caller.
 
 RPC has following behaviours:
@@ -201,7 +203,7 @@ public class CalculatorAddRequest
     public int NumberB { get; set; }
 }
 
-public class CalculatorAddResponse 
+public class CalculatorAddResponse
 {
     public int Result { get; set; }
 }
@@ -229,7 +231,7 @@ var result = await bus.Call<CaluclatorAddRequest, CalculatorAddResponse>(new Cal
 
 ### Using logical addresses
 
-For all sender/caller methods (`Enqueue`, `Broadcast`, `Call`) you can specify optional logical address. 
+For all sender/caller methods (`Enqueue`, `Broadcast`, `Call`) you can specify optional logical address.
 Logical address allows you to create separate routing partitions and by doing that - distinct receivers groups.
 
 Let's say we want to implement weather service. Every weather station, located in different cities, will handle RPC calls.
