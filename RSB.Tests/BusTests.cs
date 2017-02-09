@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using RSB.Exceptions;
@@ -92,13 +93,18 @@ namespace RSB.Tests
 
             try
             {
-                await _busServer1.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = "error" });
+                await _busServer1.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest {Content = "error"});
 
                 Assert.Fail("Exception not thrown");
             }
             catch (CustomException ex)
             {
                 Assert.AreEqual("Test property", ex.CustomProperty);
+                Assert.AreEqual("Test exception", ex.Message);
+            }
+            catch
+            {
+                Assert.Fail("Generic exception thrown instead of the custom one");
             }
         }
 

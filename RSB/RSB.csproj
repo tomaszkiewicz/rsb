@@ -65,6 +65,7 @@
     <Compile Include="RpcCallHandler.cs" />
     <Compile Include="Exceptions\SerializationException.cs" />
     <Compile Include="Interfaces\ITransport.cs" />
+    <Compile Include="Serialization\JsonExceptionConverter.cs" />
     <Compile Include="TypeResolver.cs" />
   </ItemGroup>
   <ItemGroup>
