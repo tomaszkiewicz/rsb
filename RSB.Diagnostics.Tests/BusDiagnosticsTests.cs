@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using RSB.Interfaces;
 using RSB.Transports.RabbitMQ;
@@ -53,10 +54,9 @@ namespace RSB.Diagnostics.Tests
         }
 
         [Test]
-        public async void TestDiscovery()
+        public async Task TestDiscovery()
         {
             await _discoveryClient.DiscoverComponents(5);
-
         }
     }
 }

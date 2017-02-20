@@ -9,47 +9,51 @@ namespace RSB.Serialization
 {
     public class JsonSerializer : ISerializer
     {
-        private readonly JsonSerializerSettings _jsonSettings = new JsonSerializerSettings
+        private static readonly DefaultContractResolver ContractResolver = new CamelCasePropertyNamesContractResolver
         {
-            ContractResolver = new CamelCasePropertyNamesContractResolver()
-            {
-                // IgnoreSerializableInterface = true, <- TODO not compatible with .NET Core
-                // IgnoreSerializableAttribute = true, <- TODO not compatible with .NET Core
-            },
-            DateTimeZoneHandling = DateTimeZoneHandling.Utc,
-            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+            //IgnoreSerializableInterface = true,
+            //IgnoreSerializableAttribute = true,
         };
 
-        public JsonSerializer()
+        private static readonly JsonSerializerSettings JsonSettings = new JsonSerializerSettings
         {
-            _jsonSettings.Converters.Add(new IsoDateTimeConverter()
+            ContractResolver = ContractResolver,
+            DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+        };
+
+        static JsonSerializer()
+        {
+            JsonSettings.Converters.Add(new IsoDateTimeConverter()
             {
                 DateTimeFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss.fffffff'Z'" 
             });
 
-            _jsonSettings.Converters.Add(new StringEnumConverter()
+            JsonSettings.Converters.Add(new StringEnumConverter()
             {
                 CamelCaseText = false
             });
+
+            JsonSettings.Converters.Add(new JsonExceptionConverter(ContractResolver));
         }
 
         public object Deserialize(string str, Type type)
         {
             try
             {
-                return JsonConvert.DeserializeObject(str, type, _jsonSettings);
+                return JsonConvert.DeserializeObject(str, type, JsonSettings);
             }
             catch (Exception ex)
             {
                 throw new SerializationException(ex);
             }
         }
-
+        
         public T Deserialize<T>(string str) where T : new()
         {
             try
             {
-                return (T)JsonConvert.DeserializeObject(str, typeof(T), _jsonSettings);
+                return (T)JsonConvert.DeserializeObject(str, typeof(T), JsonSettings);
             }
             catch (Exception ex)
             {
@@ -60,7 +64,7 @@ namespace RSB.Serialization
         {
             try
             {
-                return JsonConvert.DeserializeObject(System.Text.Encoding.UTF8.GetString(bytes), type, _jsonSettings);
+                return JsonConvert.DeserializeObject(System.Text.Encoding.UTF8.GetString(bytes), type, JsonSettings);
             }
             catch (Exception ex)
             {
@@ -72,7 +76,7 @@ namespace RSB.Serialization
         {
             try
             {
-                return (T)JsonConvert.DeserializeObject(System.Text.Encoding.UTF8.GetString(bytes), typeof(T), _jsonSettings);
+                return (T)JsonConvert.DeserializeObject(System.Text.Encoding.UTF8.GetString(bytes), typeof(T), JsonSettings);
             }
             catch (Exception ex)
             {
@@ -96,7 +100,7 @@ namespace RSB.Serialization
         {
             try
             {
-                return System.Text.Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(obj, Formatting.Indented, _jsonSettings));
+                return System.Text.Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(obj, Formatting.Indented, JsonSettings));
             }
             catch (Exception ex)
             {

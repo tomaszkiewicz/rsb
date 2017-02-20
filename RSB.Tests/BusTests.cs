@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Testing.Abstractions;
 using RSB.Exceptions;
 using RSB.Interfaces;
 using RSB.Transports.RabbitMQ;
@@ -102,13 +101,18 @@ namespace RSB.Tests
 
             try
             {
-                await _busServer1.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest { Content = "error" });
+                await _busServer1.Call<TestRpcRequest, TestRpcResponse>(new TestRpcRequest {Content = "error"});
 
                 Assert.True(false, "Exception not thrown");
             }
             catch (CustomException ex)
             {
                 Assert.Equal("Test property", ex.CustomProperty);
+                Assert.Equal("Test exception", ex.Message);
+            }
+            catch
+            {
+                Assert.True(false, "Generic exception thrown instead of the custom one");
             }
         }
 
