@@ -42,7 +42,7 @@ namespace RSB.Diagnostics
                 Subsystems = new ConcurrentDictionary<string, HealthState>()
             };
 
-            var checkSubsystemsTasks = _subsystems.Select(s => CheckSubsystem(hs => response.Subsystems[s.Key] = hs, s.Value, req.SubsystemCheckTimeout));
+            var checkSubsystemsTasks = _subsystems.Select(s => CheckSubsystem(hs => response.Subsystems[s.Key] = hs, s.Value, req.SubsystemCheckTimeout ?? 20));
 
             await Task.WhenAll(checkSubsystemsTasks);
 

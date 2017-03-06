@@ -2,6 +2,6 @@
 {
     public class GetHealthRequest
     {
-        public int SubsystemCheckTimeout { get; set; }
+        public int? SubsystemCheckTimeout { get; set; }
     }
 }
