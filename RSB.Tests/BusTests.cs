@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using RSB.Exceptions;
 using RSB.Interfaces;
+using RSB.Transports.Nats;
 using RSB.Transports.RabbitMQ;
 
 namespace RSB.Tests
@@ -28,9 +29,9 @@ namespace RSB.Tests
         [SetUp]
         public void Init()
         {
-            _busServer1 = new Bus(RabbitMqTransport.FromConfigurationFile());
-            _busServer2 = new Bus(RabbitMqTransport.FromConfigurationFile());
-            _busClient = new Bus(RabbitMqTransport.FromConfigurationFile());
+            _busServer1 = new Bus(new NatsTransport());
+            _busServer2 = new Bus(new NatsTransport());
+            _busClient = new Bus(new NatsTransport());
         }
 
         [TearDown]

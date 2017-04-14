@@ -64,6 +64,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\RSB.Transports.Nats\RSB.Transports.Nats.csproj">
+      <Project>{f26b4347-342e-46e0-8f60-11182b39f79c}</Project>
+      <Name>RSB.Transports.Nats</Name>
+    </ProjectReference>
     <ProjectReference Include="..\RSB.Transports.RabbitMQ\RSB.Transports.RabbitMQ.csproj">
       <Project>{c021f4df-ab9f-4a7a-b580-bfcd46e6b31c}</Project>
       <Name>RSB.Transports.RabbitMQ</Name>

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RSB", "RSB\RSB.csproj", "{192B2DD9-8DEF-4212-812E-70CBA1231C9F}"
 EndProject
@@ -46,6 +46,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RSB.Diagnostics.DiscoveryClient", "RSB.Diagnostics.DiscoveryClient\RSB.Diagnostics.DiscoveryClient.csproj", "{FB29D796-ACAF-482C-B9A6-63BB0B60E1C6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleDiscoverableModule", "SampleDiscoverableModule\SampleDiscoverableModule.csproj", "{AF5AE38A-978F-4E45-8FCE-1D41EBB12121}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Nats", "Nats", "{E2B5D74D-2182-4579-B0B2-CE840EA9F521}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RSB.Transports.Nats", "RSB.Transports.Nats\RSB.Transports.Nats.csproj", "{F26B4347-342E-46E0-8F60-11182B39F79C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -93,6 +97,10 @@ Global
 		{AF5AE38A-978F-4E45-8FCE-1D41EBB12121}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AF5AE38A-978F-4E45-8FCE-1D41EBB12121}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AF5AE38A-978F-4E45-8FCE-1D41EBB12121}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F26B4347-342E-46E0-8F60-11182B39F79C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F26B4347-342E-46E0-8F60-11182B39F79C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F26B4347-342E-46E0-8F60-11182B39F79C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F26B4347-342E-46E0-8F60-11182B39F79C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -109,5 +117,7 @@ Global
 		{401FC73E-496D-46AC-896B-06A4B253DABA} = {9C0397E7-FC23-46C0-A6E1-3DA9ADC75AB7}
 		{FB29D796-ACAF-482C-B9A6-63BB0B60E1C6} = {9C0397E7-FC23-46C0-A6E1-3DA9ADC75AB7}
 		{AF5AE38A-978F-4E45-8FCE-1D41EBB12121} = {504BBEB9-50BE-4E0E-9471-26CD69F9F57C}
+		{E2B5D74D-2182-4579-B0B2-CE840EA9F521} = {89F0CA91-6FAC-49C2-B643-8685F383A7FB}
+		{F26B4347-342E-46E0-8F60-11182B39F79C} = {E2B5D74D-2182-4579-B0B2-CE840EA9F521}
 	EndGlobalSection
 EndGlobal
